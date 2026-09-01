@@ -1442,7 +1442,7 @@ func (ec *executionContext) field_Mutation_createNotification_args(ctx context.C
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (CreateNotificationInput, error) {
-			return ec.unmarshalNCreateNotificationInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐCreateNotificationInput(ctx, v)
+			return ec.unmarshalNCreateNotificationInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐCreateNotificationInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1456,7 +1456,7 @@ func (ec *executionContext) field_Mutation_createPlatformApp_args(ctx context.Co
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (CreatePlatformAppInput, error) {
-			return ec.unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx, v)
+			return ec.unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1470,7 +1470,7 @@ func (ec *executionContext) field_Mutation_issueAgentCredential_args(ctx context
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (IssueAgentCredentialInput, error) {
-			return ec.unmarshalNIssueAgentCredentialInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐIssueAgentCredentialInput(ctx, v)
+			return ec.unmarshalNIssueAgentCredentialInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐIssueAgentCredentialInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1484,7 +1484,7 @@ func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawAr
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (LoginInput, error) {
-			return ec.unmarshalNLoginInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐLoginInput(ctx, v)
+			return ec.unmarshalNLoginInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐLoginInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1498,7 +1498,7 @@ func (ec *executionContext) field_Mutation_registerUser_args(ctx context.Context
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (RegisterInput, error) {
-			return ec.unmarshalNRegisterInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐRegisterInput(ctx, v)
+			return ec.unmarshalNRegisterInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐRegisterInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1548,7 +1548,7 @@ func (ec *executionContext) field_PlatformMutations_createApp_args(ctx context.C
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (CreatePlatformAppInput, error) {
-			return ec.unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx, v)
+			return ec.unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -2041,7 +2041,7 @@ func (ec *executionContext) _AuthPayload_user(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *User) graphql.Marshaler {
-			return ec.marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
+			return ec.marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2281,7 +2281,7 @@ func (ec *executionContext) _Mutation_registerUser(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *AuthPayload) graphql.Marshaler {
-			return ec.marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAuthPayload(ctx, selections, v)
+			return ec.marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAuthPayload(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2325,7 +2325,7 @@ func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *AuthPayload) graphql.Marshaler {
-			return ec.marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAuthPayload(ctx, selections, v)
+			return ec.marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAuthPayload(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2369,7 +2369,7 @@ func (ec *executionContext) _Mutation_createNotification(ctx context.Context, fi
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *Notification) graphql.Marshaler {
-			return ec.marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotification(ctx, selections, v)
+			return ec.marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotification(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2412,7 +2412,7 @@ func (ec *executionContext) _Mutation_platform(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformMutations) graphql.Marshaler {
-			return ec.marshalNPlatformMutations2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx, selections, v)
+			return ec.marshalNPlatformMutations2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2445,7 +2445,7 @@ func (ec *executionContext) _Mutation_createPlatformApp(ctx context.Context, fie
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
-			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
+			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2489,7 +2489,7 @@ func (ec *executionContext) _Mutation_updatePlatformAppStatus(ctx context.Contex
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
-			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
+			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
 		},
 		true,
 		true,
@@ -2533,7 +2533,7 @@ func (ec *executionContext) _Mutation_issueAgentCredential(ctx context.Context, 
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *IssuedAgentCredential) graphql.Marshaler {
-			return ec.marshalNIssuedAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx, selections, v)
+			return ec.marshalNIssuedAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3011,7 +3011,7 @@ func (ec *executionContext) _PlatformAppConnection_items(ctx context.Context, fi
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*PlatformApp) graphql.Marshaler {
-			return ec.marshalNPlatformApp2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppᚄ(ctx, selections, v)
+			return ec.marshalNPlatformApp2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3366,7 +3366,7 @@ func (ec *executionContext) _PlatformMutations_createApp(ctx context.Context, fi
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
-			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
+			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3410,7 +3410,7 @@ func (ec *executionContext) _PlatformMutations_updateAppStatus(ctx context.Conte
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
-			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
+			return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3454,7 +3454,7 @@ func (ec *executionContext) _PlatformOps_apps(ctx context.Context, field graphql
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformAppConnection) graphql.Marshaler {
-			return ec.marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx, selections, v)
+			return ec.marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3497,7 +3497,7 @@ func (ec *executionContext) _PlatformOps_billing(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformBillingSummary) graphql.Marshaler {
-			return ec.marshalNPlatformBillingSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx, selections, v)
+			return ec.marshalNPlatformBillingSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3530,7 +3530,7 @@ func (ec *executionContext) _PlatformOps_invoices(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*PlatformInvoice) graphql.Marshaler {
-			return ec.marshalNPlatformInvoice2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformInvoiceᚄ(ctx, selections, v)
+			return ec.marshalNPlatformInvoice2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformInvoiceᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3573,7 +3573,7 @@ func (ec *executionContext) _PlatformOps_staff(ctx context.Context, field graphq
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*PlatformStaffMember) graphql.Marshaler {
-			return ec.marshalNPlatformStaffMember2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformStaffMemberᚄ(ctx, selections, v)
+			return ec.marshalNPlatformStaffMember2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformStaffMemberᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3606,7 +3606,7 @@ func (ec *executionContext) _PlatformOps_alerts(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*PlatformAlert) graphql.Marshaler {
-			return ec.marshalNPlatformAlert2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAlertᚄ(ctx, selections, v)
+			return ec.marshalNPlatformAlert2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAlertᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3649,7 +3649,7 @@ func (ec *executionContext) _PlatformOps_reports(ctx context.Context, field grap
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformReportsSummary) graphql.Marshaler {
-			return ec.marshalNPlatformReportsSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx, selections, v)
+			return ec.marshalNPlatformReportsSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3842,7 +3842,7 @@ func (ec *executionContext) _Query_viewer(ctx context.Context, field graphql.Col
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *Viewer) graphql.Marshaler {
-			return ec.marshalNViewer2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐViewer(ctx, selections, v)
+			return ec.marshalNViewer2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐViewer(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3874,7 +3874,7 @@ func (ec *executionContext) _Query_platform(ctx context.Context, field graphql.C
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformOps) graphql.Marshaler {
-			return ec.marshalNPlatformOps2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformOps(ctx, selections, v)
+			return ec.marshalNPlatformOps2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformOps(ctx, selections, v)
 		},
 		true,
 		true,
@@ -3907,7 +3907,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *User) graphql.Marshaler {
-			return ec.marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
+			return ec.marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3950,7 +3950,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *User) graphql.Marshaler {
-			return ec.marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
+			return ec.marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
 		},
 		true,
 		false,
@@ -3983,7 +3983,7 @@ func (ec *executionContext) _Query_myNotifications(ctx context.Context, field gr
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*Notification) graphql.Marshaler {
-			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx, selections, v)
+			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4027,7 +4027,7 @@ func (ec *executionContext) _Query_platformApps(ctx context.Context, field graph
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *PlatformAppConnection) graphql.Marshaler {
-			return ec.marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx, selections, v)
+			return ec.marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4070,7 +4070,7 @@ func (ec *executionContext) _Query_agentCredentials(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*AgentCredential) graphql.Marshaler {
-			return ec.marshalNAgentCredential2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAgentCredentialᚄ(ctx, selections, v)
+			return ec.marshalNAgentCredential2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAgentCredentialᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4103,7 +4103,7 @@ func (ec *executionContext) _Query_tickets(ctx context.Context, field graphql.Co
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *TicketConnection) graphql.Marshaler {
-			return ec.marshalNTicketConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicketConnection(ctx, selections, v)
+			return ec.marshalNTicketConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicketConnection(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4337,7 +4337,7 @@ func (ec *executionContext) _TicketConnection_items(ctx context.Context, field g
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*Ticket) graphql.Marshaler {
-			return ec.marshalNTicket2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicketᚄ(ctx, selections, v)
+			return ec.marshalNTicket2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicketᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4553,7 +4553,7 @@ func (ec *executionContext) _Viewer_me(ctx context.Context, field graphql.Collec
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *User) graphql.Marshaler {
-			return ec.marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
+			return ec.marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx, selections, v)
 		},
 		true,
 		true,
@@ -4586,7 +4586,7 @@ func (ec *executionContext) _Viewer_notifications(ctx context.Context, field gra
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v []*Notification) graphql.Marshaler {
-			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx, selections, v)
+			return ec.marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx, selections, v)
 		},
 		true,
 		true,
@@ -7917,11 +7917,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAgentCredential2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAgentCredentialᚄ(ctx context.Context, sel ast.SelectionSet, v []*AgentCredential) graphql.Marshaler {
+func (ec *executionContext) marshalNAgentCredential2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAgentCredentialᚄ(ctx context.Context, sel ast.SelectionSet, v []*AgentCredential) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAgentCredential(ctx, sel, v[i])
+		return ec.marshalNAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAgentCredential(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -7933,7 +7933,7 @@ func (ec *executionContext) marshalNAgentCredential2ᚕᚖgithubᚗcomᚋwilliam
 	return ret
 }
 
-func (ec *executionContext) marshalNAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAgentCredential(ctx context.Context, sel ast.SelectionSet, v *AgentCredential) graphql.Marshaler {
+func (ec *executionContext) marshalNAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAgentCredential(ctx context.Context, sel ast.SelectionSet, v *AgentCredential) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7943,11 +7943,11 @@ func (ec *executionContext) marshalNAgentCredential2ᚖgithubᚗcomᚋwilliamlab
 	return ec._AgentCredential(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAuthPayload2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAuthPayload(ctx context.Context, sel ast.SelectionSet, v AuthPayload) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthPayload2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAuthPayload(ctx context.Context, sel ast.SelectionSet, v AuthPayload) graphql.Marshaler {
 	return ec._AuthPayload(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐAuthPayload(ctx context.Context, sel ast.SelectionSet, v *AuthPayload) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthPayload2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐAuthPayload(ctx context.Context, sel ast.SelectionSet, v *AuthPayload) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -7973,12 +7973,12 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCreateNotificationInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐCreateNotificationInput(ctx context.Context, v any) (CreateNotificationInput, error) {
+func (ec *executionContext) unmarshalNCreateNotificationInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐCreateNotificationInput(ctx context.Context, v any) (CreateNotificationInput, error) {
 	res, err := ec.unmarshalInputCreateNotificationInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx context.Context, v any) (CreatePlatformAppInput, error) {
+func (ec *executionContext) unmarshalNCreatePlatformAppInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐCreatePlatformAppInput(ctx context.Context, v any) (CreatePlatformAppInput, error) {
 	res, err := ec.unmarshalInputCreatePlatformAppInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -8015,16 +8015,16 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNIssueAgentCredentialInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐIssueAgentCredentialInput(ctx context.Context, v any) (IssueAgentCredentialInput, error) {
+func (ec *executionContext) unmarshalNIssueAgentCredentialInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐIssueAgentCredentialInput(ctx context.Context, v any) (IssueAgentCredentialInput, error) {
 	res, err := ec.unmarshalInputIssueAgentCredentialInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNIssuedAgentCredential2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx context.Context, sel ast.SelectionSet, v IssuedAgentCredential) graphql.Marshaler {
+func (ec *executionContext) marshalNIssuedAgentCredential2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx context.Context, sel ast.SelectionSet, v IssuedAgentCredential) graphql.Marshaler {
 	return ec._IssuedAgentCredential(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNIssuedAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx context.Context, sel ast.SelectionSet, v *IssuedAgentCredential) graphql.Marshaler {
+func (ec *executionContext) marshalNIssuedAgentCredential2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐIssuedAgentCredential(ctx context.Context, sel ast.SelectionSet, v *IssuedAgentCredential) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8034,20 +8034,20 @@ func (ec *executionContext) marshalNIssuedAgentCredential2ᚖgithubᚗcomᚋwill
 	return ec._IssuedAgentCredential(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐLoginInput(ctx context.Context, v any) (LoginInput, error) {
+func (ec *executionContext) unmarshalNLoginInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐLoginInput(ctx context.Context, v any) (LoginInput, error) {
 	res, err := ec.unmarshalInputLoginInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNNotification2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotification(ctx context.Context, sel ast.SelectionSet, v Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotification(ctx context.Context, sel ast.SelectionSet, v Notification) graphql.Marshaler {
 	return ec._Notification(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotificationᚄ(ctx context.Context, sel ast.SelectionSet, v []*Notification) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotification(ctx, sel, v[i])
+		return ec.marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotification(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8059,7 +8059,7 @@ func (ec *executionContext) marshalNNotification2ᚕᚖgithubᚗcomᚋwilliamlab
 	return ret
 }
 
-func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐNotification(ctx context.Context, sel ast.SelectionSet, v *Notification) graphql.Marshaler {
+func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐNotification(ctx context.Context, sel ast.SelectionSet, v *Notification) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8069,11 +8069,11 @@ func (ec *executionContext) marshalNNotification2ᚖgithubᚗcomᚋwilliamlabdev
 	return ec._Notification(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformAlert2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAlertᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformAlert) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformAlert2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAlertᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformAlert) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPlatformAlert2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAlert(ctx, sel, v[i])
+		return ec.marshalNPlatformAlert2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAlert(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8085,7 +8085,7 @@ func (ec *executionContext) marshalNPlatformAlert2ᚕᚖgithubᚗcomᚋwilliamla
 	return ret
 }
 
-func (ec *executionContext) marshalNPlatformAlert2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAlert(ctx context.Context, sel ast.SelectionSet, v *PlatformAlert) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformAlert2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAlert(ctx context.Context, sel ast.SelectionSet, v *PlatformAlert) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8095,15 +8095,15 @@ func (ec *executionContext) marshalNPlatformAlert2ᚖgithubᚗcomᚋwilliamlabde
 	return ec._PlatformAlert(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformApp2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx context.Context, sel ast.SelectionSet, v PlatformApp) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformApp2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx context.Context, sel ast.SelectionSet, v PlatformApp) graphql.Marshaler {
 	return ec._PlatformApp(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformApp2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformApp) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformApp2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformApp) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, sel, v[i])
+		return ec.marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8115,7 +8115,7 @@ func (ec *executionContext) marshalNPlatformApp2ᚕᚖgithubᚗcomᚋwilliamlabd
 	return ret
 }
 
-func (ec *executionContext) marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformApp(ctx context.Context, sel ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformApp(ctx context.Context, sel ast.SelectionSet, v *PlatformApp) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8125,11 +8125,11 @@ func (ec *executionContext) marshalNPlatformApp2ᚖgithubᚗcomᚋwilliamlabdev�
 	return ec._PlatformApp(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformAppConnection2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx context.Context, sel ast.SelectionSet, v PlatformAppConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformAppConnection2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx context.Context, sel ast.SelectionSet, v PlatformAppConnection) graphql.Marshaler {
 	return ec._PlatformAppConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx context.Context, sel ast.SelectionSet, v *PlatformAppConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformAppConnection(ctx context.Context, sel ast.SelectionSet, v *PlatformAppConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8139,11 +8139,11 @@ func (ec *executionContext) marshalNPlatformAppConnection2ᚖgithubᚗcomᚋwill
 	return ec._PlatformAppConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformBillingSummary2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx context.Context, sel ast.SelectionSet, v PlatformBillingSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformBillingSummary2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx context.Context, sel ast.SelectionSet, v PlatformBillingSummary) graphql.Marshaler {
 	return ec._PlatformBillingSummary(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformBillingSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx context.Context, sel ast.SelectionSet, v *PlatformBillingSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformBillingSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformBillingSummary(ctx context.Context, sel ast.SelectionSet, v *PlatformBillingSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8153,11 +8153,11 @@ func (ec *executionContext) marshalNPlatformBillingSummary2ᚖgithubᚗcomᚋwil
 	return ec._PlatformBillingSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformInvoice2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformInvoiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformInvoice) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformInvoice2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformInvoiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformInvoice) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPlatformInvoice2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformInvoice(ctx, sel, v[i])
+		return ec.marshalNPlatformInvoice2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformInvoice(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8169,7 +8169,7 @@ func (ec *executionContext) marshalNPlatformInvoice2ᚕᚖgithubᚗcomᚋwilliam
 	return ret
 }
 
-func (ec *executionContext) marshalNPlatformInvoice2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformInvoice(ctx context.Context, sel ast.SelectionSet, v *PlatformInvoice) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformInvoice2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformInvoice(ctx context.Context, sel ast.SelectionSet, v *PlatformInvoice) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8179,11 +8179,11 @@ func (ec *executionContext) marshalNPlatformInvoice2ᚖgithubᚗcomᚋwilliamlab
 	return ec._PlatformInvoice(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformMutations2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx context.Context, sel ast.SelectionSet, v PlatformMutations) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformMutations2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx context.Context, sel ast.SelectionSet, v PlatformMutations) graphql.Marshaler {
 	return ec._PlatformMutations(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformMutations2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx context.Context, sel ast.SelectionSet, v *PlatformMutations) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformMutations2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformMutations(ctx context.Context, sel ast.SelectionSet, v *PlatformMutations) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8193,11 +8193,11 @@ func (ec *executionContext) marshalNPlatformMutations2ᚖgithubᚗcomᚋwilliaml
 	return ec._PlatformMutations(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformOps2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformOps(ctx context.Context, sel ast.SelectionSet, v PlatformOps) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformOps2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformOps(ctx context.Context, sel ast.SelectionSet, v PlatformOps) graphql.Marshaler {
 	return ec._PlatformOps(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformOps2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformOps(ctx context.Context, sel ast.SelectionSet, v *PlatformOps) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformOps2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformOps(ctx context.Context, sel ast.SelectionSet, v *PlatformOps) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8207,11 +8207,11 @@ func (ec *executionContext) marshalNPlatformOps2ᚖgithubᚗcomᚋwilliamlabdev�
 	return ec._PlatformOps(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformReportsSummary2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx context.Context, sel ast.SelectionSet, v PlatformReportsSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformReportsSummary2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx context.Context, sel ast.SelectionSet, v PlatformReportsSummary) graphql.Marshaler {
 	return ec._PlatformReportsSummary(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlatformReportsSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx context.Context, sel ast.SelectionSet, v *PlatformReportsSummary) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformReportsSummary2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformReportsSummary(ctx context.Context, sel ast.SelectionSet, v *PlatformReportsSummary) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8221,11 +8221,11 @@ func (ec *executionContext) marshalNPlatformReportsSummary2ᚖgithubᚗcomᚋwil
 	return ec._PlatformReportsSummary(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlatformStaffMember2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformStaffMemberᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformStaffMember) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformStaffMember2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformStaffMemberᚄ(ctx context.Context, sel ast.SelectionSet, v []*PlatformStaffMember) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNPlatformStaffMember2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformStaffMember(ctx, sel, v[i])
+		return ec.marshalNPlatformStaffMember2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformStaffMember(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8237,7 +8237,7 @@ func (ec *executionContext) marshalNPlatformStaffMember2ᚕᚖgithubᚗcomᚋwil
 	return ret
 }
 
-func (ec *executionContext) marshalNPlatformStaffMember2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐPlatformStaffMember(ctx context.Context, sel ast.SelectionSet, v *PlatformStaffMember) graphql.Marshaler {
+func (ec *executionContext) marshalNPlatformStaffMember2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐPlatformStaffMember(ctx context.Context, sel ast.SelectionSet, v *PlatformStaffMember) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8247,7 +8247,7 @@ func (ec *executionContext) marshalNPlatformStaffMember2ᚖgithubᚗcomᚋwillia
 	return ec._PlatformStaffMember(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐRegisterInput(ctx context.Context, v any) (RegisterInput, error) {
+func (ec *executionContext) unmarshalNRegisterInput2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐRegisterInput(ctx context.Context, v any) (RegisterInput, error) {
 	res, err := ec.unmarshalInputRegisterInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -8297,11 +8297,11 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNTicket2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicketᚄ(ctx context.Context, sel ast.SelectionSet, v []*Ticket) graphql.Marshaler {
+func (ec *executionContext) marshalNTicket2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicketᚄ(ctx context.Context, sel ast.SelectionSet, v []*Ticket) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
 		fc.Result = &v[i]
-		return ec.marshalNTicket2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicket(ctx, sel, v[i])
+		return ec.marshalNTicket2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicket(ctx, sel, v[i])
 	})
 
 	for _, e := range ret {
@@ -8313,7 +8313,7 @@ func (ec *executionContext) marshalNTicket2ᚕᚖgithubᚗcomᚋwilliamlabdevᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNTicket2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicket(ctx context.Context, sel ast.SelectionSet, v *Ticket) graphql.Marshaler {
+func (ec *executionContext) marshalNTicket2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicket(ctx context.Context, sel ast.SelectionSet, v *Ticket) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8323,11 +8323,11 @@ func (ec *executionContext) marshalNTicket2ᚖgithubᚗcomᚋwilliamlabdevᚋsaa
 	return ec._Ticket(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTicketConnection2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicketConnection(ctx context.Context, sel ast.SelectionSet, v TicketConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNTicketConnection2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicketConnection(ctx context.Context, sel ast.SelectionSet, v TicketConnection) graphql.Marshaler {
 	return ec._TicketConnection(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTicketConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐTicketConnection(ctx context.Context, sel ast.SelectionSet, v *TicketConnection) graphql.Marshaler {
+func (ec *executionContext) marshalNTicketConnection2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐTicketConnection(ctx context.Context, sel ast.SelectionSet, v *TicketConnection) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8337,11 +8337,11 @@ func (ec *executionContext) marshalNTicketConnection2ᚖgithubᚗcomᚋwilliamla
 	return ec._TicketConnection(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNUser2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v *User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v *User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8351,11 +8351,11 @@ func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaas�
 	return ec._User(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNViewer2githubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐViewer(ctx context.Context, sel ast.SelectionSet, v Viewer) graphql.Marshaler {
+func (ec *executionContext) marshalNViewer2githubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐViewer(ctx context.Context, sel ast.SelectionSet, v Viewer) graphql.Marshaler {
 	return ec._Viewer(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNViewer2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐViewer(ctx context.Context, sel ast.SelectionSet, v *Viewer) graphql.Marshaler {
+func (ec *executionContext) marshalNViewer2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐViewer(ctx context.Context, sel ast.SelectionSet, v *Viewer) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
@@ -8571,7 +8571,7 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑplatformᚑcoreᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v *User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋwilliamlabdevᚋsaasᚑforgeᚋappsᚋbffᚋgraphᚐUser(ctx context.Context, sel ast.SelectionSet, v *User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
