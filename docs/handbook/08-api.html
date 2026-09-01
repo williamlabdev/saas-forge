@@ -1,0 +1,83 @@
+<section class="chapter" id="ch8">
+<h2>8. API 參考</h2>
+<p class="lead">所有內部 API 都掛在 <code>/api/v1</code> 之下,以 <code>Authorization: Bearer &lt;token&gt;</code> 認證。若部署有設定 gateway secret,除了 <code>/health</code> 之外每個請求都要帶 <code>X-Gateway-Secret</code>。</p>
+
+<h3>8.1 登入與憑證</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:40%">路徑</th><th>用途</th></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/login</code></td><td>登入取得 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/refresh</code></td><td>換新 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/switch-tenant</code></td><td>切換到另一個租戶的 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/logout</code></td><td>登出</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/agent-tokens</code></td><td>簽發 agent 憑證(owner / admin)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/auth/agent-tokens</code></td><td>列出已發放的憑證</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/auth/agent-tokens/{id}</code></td><td>撤銷憑證</td></tr>
+</table>
+
+<h3>8.2 內容</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:44%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries</code></td><td><code>content:create</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries</code></td><td><code>content:list</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:read</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:update</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:delete</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/publish</code></td><td><code>content:publish</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/unpublish</code></td><td><code>content:update</code>(下架是止血)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/translations</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/attribution</code></td><td><code>content:activity:read</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/preview-link</code></td><td><code>content:read</code></td></tr>
+</table>
+
+<h3>8.3 結構</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:50%">路徑</th><th>需要的權限</th></tr>
+<tr><td>GET</td><td><code>/api/v1/content/types</code></td><td><code>content:list</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types/{name}/fields</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/types/{name}/fields/{key}</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/types/{name}/fields/{key}</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types/{name}/fields/{key}/rename</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/types/{name}</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/export</code></td><td><code>content:list</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/plan</code></td><td><code>content:schema:plan</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/apply</code></td><td><code>content:schema:write</code></td></tr>
+</table>
+<p>四個 <code>content:schema:*</code> 動詞的破壞性由低到高是 <code>amend</code> → <code>plan</code> → <code>propose</code> → <code>write</code>。只有 <code>write</code> 是 owner / admin 專屬。</p>
+
+<h3>8.4 提案</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:52%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals</code></td><td><code>content:schema:propose</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals</code></td><td><code>content:review:list</code>(審核佇列)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/{id}</code></td><td><code>content:review:list</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/mine</code></td><td><code>content:schema:propose</code>(自己送的)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/mine/{id}</code></td><td><code>content:schema:propose</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals/{id}/approve</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals/{id}/reject</code></td><td><code>content:schema:write</code></td></tr>
+</table>
+
+<h3>8.5 媒體、活動、其他</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:44%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/media</code></td><td><code>content:create</code>(開始上傳)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/media/{id}/complete</code></td><td><code>content:update</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/media/{id}/url</code></td><td>取簽署 URL</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/media/{id}</code></td><td><code>content:delete</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/activity</code></td><td><code>content:activity:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/pending-review</code></td><td><code>content:review:list</code>,<strong>agent 憑證一律不得存取</strong></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/usage</code></td><td>租戶配額用量</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/webhooks</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/tenants/invites</code></td><td>邀請成員(owner / admin)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/tenants/invites/accept</code></td><td>接受邀請(免授權,靠邀請碼)</td></tr>
+</table>
+
+<h3>8.6 對外取用已發佈內容(delivery edge)</h3>
+<p>前台站台走 <code>:4100</code>,路徑<strong>不含</strong> <code>/api</code> 前綴,而且只讀得到已發佈的內容:</p>
+<table>
+<tr><td style="width:8%">GET</td><td style="width:44%"><code>/v1/{tenant}/{type}/</code></td><td>列出已發佈 entry</td></tr>
+<tr><td>GET</td><td><code>/v1/{tenant}/{type}/{id}</code></td><td>取單筆已發佈 entry</td></tr>
+<tr><td>GET</td><td><code>/v1/{tenant}/media/{id}</code></td><td>取已發佈的媒體</td></tr>
+</table>
+<p>需要 delivery 憑證,與 console / agent 憑證是不同的東西。草稿永遠不會從這裡流出去。</p>
+</section>

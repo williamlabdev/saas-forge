@@ -1,0 +1,24 @@
+<section class="chapter" id="ch1">
+<h2>1. 這套 CMS 是什麼</h2>
+<p class="lead">SaaSForge CMS 是一套多租戶的內容管理系統:人透過操作介面編輯與發佈內容,AI agent 透過受限的憑證做同樣的事,而任何會破壞既有內容的結構變更,都必須先變成一張「提案」讓人回答。</p>
+
+<h3>1.1 三個入口</h3>
+<table>
+<tr><th style="width:22%">入口</th><th style="width:20%">誰在用</th><th>做什麼</th></tr>
+<tr><td><strong>Admin console</strong><br><code>:5173</code><br><small>另一個 repo,未開源</small></td><td>人</td><td>建立與編輯內容、發佈、審核 schema 提案、發放 agent 憑證——全部都是下面那條 REST API 的能力,換成任何前端都做得到。對照見第 4 章。</td></tr>
+<tr><td><strong>Domain REST API</strong><br><code>:8080</code></td><td>程式 / agent</td><td>所有能力的真正來源。console 與 agent 都只是它的客戶端。第 8 章。</td></tr>
+<tr><td><strong>Delivery edge</strong><br><code>:4100</code></td><td>你的網站</td><td>唯讀取出已發佈內容,給前台站台或 App 消費。</td></tr>
+</table>
+<div class="note"><strong>還有一個 GraphQL BFF(<code>:4000</code>)</strong>它是給瀏覽器端前端用的聚合層,會隨著介面的需求變動,不是穩定的公開契約。要串程式或 agent,用 <code>:8080</code> 的 REST。</div>
+
+<h3>1.2 一條內容的生命</h3>
+<ol class="steps">
+<li><strong>定義結構</strong>——建立一個 content type(例如 <code>article</code>),決定它有哪些欄位。</li>
+<li><strong>寫內容</strong>——在該 type 下新增 entry,狀態是 <code>draft</code>。</li>
+<li><strong>發佈</strong>——把 entry 轉成 <code>published</code>。這一刻它才會出現在 delivery edge。</li>
+<li><strong>改結構</strong>——之後要加欄位、刪欄位、改型別時,一律先跑 <em>plan</em> 看影響,再決定直接套用或送出提案。第 6 章。</li>
+</ol>
+
+<h3>1.3 只有兩種 entry 狀態</h3>
+<p>系統刻意只有 <code>draft</code> 與 <code>published</code>,沒有「待審」「排程」這類中間狀態。要下架一篇已發佈的內容,是把它改回 draft——這被視為「止血」,所以權限跟一般編輯相同,不需要發佈權。</p>
+</section>

@@ -1,0 +1,22 @@
+# Ticket vertical-slice schema. Kept in its own file so gqlgen's `graph/*.graphql`
+# glob picks it up without touching the central schema.graphql. The Query field
+# is added with `extend type Query` so it merges into the root Query type.
+
+type Ticket {
+  id: ID!
+  name: String!
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type TicketConnection {
+  items: [Ticket!]!
+  total: Int!
+  limit: Int!
+  offset: Int!
+}
+
+extend type Query {
+  tickets(limit: Int = 20, offset: Int = 0): TicketConnection!
+}

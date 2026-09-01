@@ -1,0 +1,56 @@
+<section class="chapter" id="ch7">
+<h2>7. 讓 AI agent 使用這套 CMS</h2>
+<p class="lead">Agent 不是拿你的帳號登入。它拿一張<strong>單獨簽發、範圍寫死、可以隨時撤銷</strong>的憑證,而且它能做的事永遠是你能做的事的子集。</p>
+
+<h3>7.1 發一張憑證</h3>
+<p>對 <code>POST /api/v1/auth/agent-tokens</code> 送出三件事(owner / admin 才有這個權限):</p>
+<table>
+<tr><th style="width:24%">欄位</th><th>意思</th></tr>
+<tr><td><code>agent_id</code></td><td>你替這支 agent 取的名字。稽核紀錄與速率限制都用它。</td></tr>
+<tr><td><code>allowed_types</code></td><td><strong>白名單,必填且不可為空。</strong>沒列進來的 content type,這支 agent 完全碰不到。</td></tr>
+<tr><td><code>tenant_role</code></td><td>這支 agent 在租戶裡的角色。決定它是唯讀、能寫、還是能發佈。</td></tr>
+</table>
+<div class="warn"><strong>token 只會出現一次</strong>明文只在這一次的回應主體裡。系統<strong>不保存明文</strong>,之後 <code>GET /auth/agent-tokens</code> 只列得出發放紀錄,列不出 token 本身。弄丟就只能撤銷後重發。</div>
+<div class="note"><strong>你發不出比自己更大的權限</strong>owner 能發 admin / editor / viewer;admin 只能發 editor / viewer;editor 與 viewer 一張都發不了。</div>
+
+<h3>7.2 撤銷</h3>
+<p><code>DELETE /api/v1/auth/agent-tokens/{id}</code>,<code>{id}</code> 取自 <code>GET /auth/agent-tokens</code> 的列表。撤銷立即生效——憑證裡帶著一個指向發放紀錄的識別碼,那筆紀錄被撤銷、過期或不存在,請求就會被拒。不需要等 token 自然到期。</p>
+
+<h3>7.3 呼叫方式</h3>
+<pre><code>curl http://localhost:8080/api/v1/content/entries?type=article \
+  -H "Authorization: Bearer &lt;agent token&gt;" \
+  -H "X-Gateway-Secret: &lt;gateway secret&gt;"</code></pre>
+<p>Agent 與人用的是同一組 API 與同一個 header 格式。差別全在憑證裡帶的範圍。</p>
+
+<h3>7.4 速率限制</h3>
+<p>每支 agent 各自計算,額度不互相排擠(用 <code>租戶 + agent 名稱</code> 當 key,不是用憑證流水號——所以重發一張新憑證不會繞過限制)。人類使用者不受這層限制。</p>
+<table>
+<tr><th style="width:34%"><code>AGENT_RATE_LIMIT</code></th><td>每個時間窗允許幾次請求。<strong>預設 0 = 不啟用</strong></td></tr>
+<tr><th><code>AGENT_RATE_WINDOW_SEC</code></th><td>時間窗長度,預設 <code>60</code> 秒</td></tr>
+</table>
+<p>超過時回 HTTP <code>429</code>,錯誤碼 <code>AGENT_RATE_LIMITED</code>。</p>
+
+<h3>7.5 用 MCP 接(給 Claude 這類助理)</h3>
+<p>倉庫附了一個 MCP server(<code>apps/cmsmcp</code>),把 CMS 包成 AI 助理可以直接呼叫的工具:</p>
+<table>
+<tr><th style="width:32%">工具</th><th>做什麼</th></tr>
+<tr><td><code>cms_describe</code></td><td>列出這張憑證看得到的所有 content type、欄位、權限與可用的篩選運算子。<strong>agent 該先呼叫這個</strong>,而不是靠猜。</td></tr>
+<tr><td><code>cms_list_entries</code></td><td>查詢 entry,支援篩選、排序、locale 與欄位投影</td></tr>
+<tr><td><code>cms_get_entry</code></td><td>取單筆,含完整內容、版本號與發佈狀態</td></tr>
+<tr><td><code>cms_list_translations</code></td><td>列出某筆內容的所有語言版本</td></tr>
+<tr><td><code>cms_create_entry</code></td><td>新建草稿。可帶冪等鍵,重試不會變成兩筆</td></tr>
+<tr><td><code>cms_update_entry</code></td><td>修改草稿。<strong>必須帶版本號</strong>,避免蓋掉別人的修改</td></tr>
+<tr><td><code>cms_set_status</code></td><td>下架已發佈的內容。<strong>不能拿來發佈</strong></td></tr>
+</table>
+<div class="tip"><strong>工具清單本身就是一道界線</strong>沒有 <code>cms_publish</code>,也沒有任何刪除欄位的工具。「把東西放上線」與「破壞結構」這兩件事,不在 agent 的工具箱裡——它連要求都提不出來,只能透過提案流程請人決定。</div>
+
+<h4>設定</h4>
+<pre><code># 本機 stdio 模式
+DOMAIN_API_URL=http://localhost:8080
+CMS_AGENT_TOKEN=&lt;agent token&gt;
+GATEWAY_SECRET=&lt;gateway secret&gt;      # 選填
+CMS_MCP_TIMEOUT_SECONDS=10           # 預設 10
+CMS_MCP_DEFAULT_LIMIT=10             # 預設分頁大小
+CMS_MCP_MAX_LIMIT=50                 # 分頁上限</code></pre>
+<p>要部署成共用服務就設 <code>CMS_MCP_HTTP_ADDR</code>(例如 <code>:8081</code>)。此時<strong>不可</strong>設 <code>CMS_AGENT_TOKEN</code>——每個呼叫自己帶 token,一個行程不會綁死一張憑證。</p>
+</section>

@@ -1,0 +1,38 @@
+<section class="chapter" id="ch3">
+<h2>3. 概念與角色</h2>
+
+<h3>3.1 租戶(tenant)</h3>
+<p>每一份內容都屬於一個租戶,租戶之間完全隔離。你的身分不是全站唯一的——同一個帳號可以在 A 租戶是 owner、在 B 租戶是 viewer。切換租戶(<code>POST /api/v1/auth/switch-tenant</code>)換到的是另一張 token,你的權限跟著那張 token 換。</p>
+
+<h3>3.2 四種成員角色</h3>
+<table>
+<tr><th style="width:16%">角色</th><th>能做的事</th></tr>
+<tr><td><span class="role own">owner</span></td><td>租戶內全部權限,包含刪除欄位這類破壞性的 schema 變更、審核提案、發放 agent 憑證。</td></tr>
+<tr><td><span class="role own">admin</span></td><td>與 owner 相同的日常權限。差別在能邀請/發放的對象範圍較窄(見下)。</td></tr>
+<tr><td><span class="role edt">editor</span></td><td>內容的建立、修改、刪除、發佈;可以新增欄位這類<em>可逆</em>的 schema 變更;可以<em>提案</em>破壞性變更,但不能自己套用。</td></tr>
+<tr><td><span class="role vw">viewer</span></td><td>唯讀。看得到內容,看不到發佈佇列、活動紀錄與提案佇列。</td></tr>
+</table>
+<div class="note"><strong>邀請與發憑證的上限</strong>owner 可以邀請 admin / editor / viewer,admin 只能往下發 editor / viewer。editor 與 viewer 不能發放任何 agent 憑證。沒有人能邀請另一個 owner——owner 由租戶建立時決定。</div>
+
+<h3>3.3 一條分界線:誰能破壞既有內容</h3>
+<p>整套權限設計繞著一個問題轉:<strong>這個動作會不會讓已經存在的內容消失或壞掉?</strong></p>
+<table>
+<tr><th style="width:26%">動作</th><th style="width:22%">誰可以</th><th>為什麼</th></tr>
+<tr><td>新增欄位、改標籤</td><td>owner / admin / editor</td><td>可逆,加了不會弄丟東西。</td></tr>
+<tr><td>寫、發佈、下架內容</td><td>owner / admin / editor</td><td>能改內容的人就能決定它上不上線。</td></tr>
+<tr><td><strong>刪欄位、刪 type、改型別</strong></td><td>owner / admin</td><td>會讓既有資料無法還原。這是唯一一條真正的界線。</td></tr>
+<tr><td>看變更影響(plan)、送出提案</td><td>owner / admin / editor</td><td>兩者都不寫入任何內容;提案只是「請求」,不是權限。</td></tr>
+<tr><td>審核/套用提案</td><td>owner / admin</td><td>與「刪欄位」是同一個權限,沒有第二道門。</td></tr>
+</table>
+
+<h3>3.4 Content type 與欄位</h3>
+<p>一個 content type 就是一種內容的結構定義(<code>article</code>、<code>product</code>…)。每個 type 帶一組欄位,支援的型別有:</p>
+<table>
+<tr><td><code>string</code> 單行文字</td><td><code>text</code> 多行文字</td><td><code>richtext</code> 富文本</td></tr>
+<tr><td><code>number</code> 數字</td><td><code>boolean</code> 是/否</td><td><code>enum</code> 選項</td></tr>
+<tr><td><code>date</code> 日期</td><td><code>datetime</code> 日期時間</td><td><code>file</code> 檔案</td></tr>
+<tr><td><code>relation</code> 關聯到其他 entry</td><td colspan="2">其中 <code>string</code> / <code>number</code> / <code>enum</code> / <code>relation</code> 可設為多值</td></tr>
+</table>
+<p>Content type 上還可以掛三組角色限制,用來把某一種內容鎖得比租戶預設更緊:<code>ReadRoles</code>(誰讀得到)、<code>WriteRoles</code>(誰寫得了)、<code>OwnOnlyRoles</code>(這些角色只能動自己建立的 entry)。留空代表沿用租戶角色的預設。</p>
+
+</section>

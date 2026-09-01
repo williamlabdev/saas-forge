@@ -1,0 +1,21 @@
+.env
+/bin/
+/dist/
+coverage.out
+coverage.html
+coverage-summary.txt
+coverage/
+*.exe
+.DS_Store
+
+.claude/settings.local.json
+
+# stray go-build binary (build artifact, never commit)
+/cmd/server/server
+
+# docs/handbook/ 的建置產物。原始章節(00–09-*.html)、style.css、build.sh 都在版控裡,
+# 這兩個是 build.sh 產生的:handbook.html 是把各章串起來的中間檔(改一章就整份重寫,
+# diff 會跟章節檔重複一次),PDF 是 1.5MB 二進位(每次重建都是一顆新 blob)。
+# 重建:./docs/handbook/build.sh
+/docs/handbook/handbook.html
+/docs/handbook/*.pdf

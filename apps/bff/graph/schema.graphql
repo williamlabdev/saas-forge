@@ -1,0 +1,241 @@
+type Query {
+  viewer: Viewer!
+  platform: PlatformOps!
+  user(id: ID!): User
+
+  me: User @deprecated(reason: "Use viewer { me }")
+  myNotifications(limit: Int = 20): [Notification!]!
+    @deprecated(reason: "Use viewer { notifications }")
+  platformApps(
+    query: String
+    status: String
+    limit: Int = 20
+    offset: Int = 0
+  ): PlatformAppConnection! @deprecated(reason: "Use platform { apps }")
+
+  """
+  The calling tenant's agent-credential registry (ADR-013 補裁 O).
+
+  Top-level rather than under `viewer` or `platform`: it is neither the
+  caller's own profile nor the platform operator's console — it is the
+  tenant's, and this schema has no tenant namespace to put it in. Adding one
+  for three fields would be a bigger change than the three fields.
+  """
+  agentCredentials: [AgentCredential!]!
+}
+
+type Mutation {
+  registerUser(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  createNotification(input: CreateNotificationInput!): Notification!
+  platform: PlatformMutations!
+  createPlatformApp(input: CreatePlatformAppInput!): PlatformApp!
+    @deprecated(reason: "Use platform { createApp }")
+  updatePlatformAppStatus(id: ID!, status: String!): PlatformApp!
+    @deprecated(reason: "Use platform { updateAppStatus }")
+
+  """
+  Mint an agent credential by downgrading the caller's OWN token (ADR-013
+  補裁 O-3). The BFF forwards that token to the domain API rather than
+  synthesising claims, so a caller with no token gets the domain's 400 that
+  names the reason — see AgentCredentialService.Issue.
+  """
+  issueAgentCredential(input: IssueAgentCredentialInput!): IssuedAgentCredential!
+
+  """
+  Revoke a credential. Takes effect on the agent's next request (補裁 O-1).
+
+  Returns Boolean rather than the revoked row because the domain answers 204
+  with no body: there is nothing to return, and inventing a row here would be
+  a second copy of state that lives on the other side.
+  """
+  revokeAgentCredential(id: ID!): Boolean!
+}
+
+type PlatformMutations {
+  createApp(input: CreatePlatformAppInput!): PlatformApp!
+  updateAppStatus(id: ID!, status: String!): PlatformApp!
+}
+
+"""Authenticated end-user scope (profile, personal notifications)."""
+type Viewer {
+  me: User!
+  notifications(limit: Int = 20): [Notification!]!
+}
+
+"""Platform operator console (apps, billing, staff, ops KPI)."""
+type PlatformOps {
+  apps(
+    query: String
+    status: String
+    limit: Int = 20
+    offset: Int = 0
+  ): PlatformAppConnection!
+  billing: PlatformBillingSummary!
+  invoices(limit: Int = 20): [PlatformInvoice!]!
+  staff: [PlatformStaffMember!]!
+  alerts(limit: Int = 20): [PlatformAlert!]!
+  reports: PlatformReportsSummary!
+}
+
+type PlatformApp {
+  id: ID!
+  name: String!
+  tenantId: String!
+  owner: String!
+  status: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type PlatformAppConnection {
+  items: [PlatformApp!]!
+  total: Int!
+  limit: Int!
+  offset: Int!
+}
+
+type PlatformBillingSummary {
+  planName: String!
+  renewsAt: String!
+  paymentStatus: String!
+  appsUsed: Int!
+  appsQuota: Int!
+  seatsUsed: Int!
+  seatsQuota: Int!
+}
+
+type PlatformInvoice {
+  id: ID!
+  issuedAt: String!
+  amount: String!
+  status: String!
+}
+
+type PlatformStaffMember {
+  id: ID!
+  name: String!
+  email: String!
+  role: String!
+}
+
+type PlatformAlert {
+  id: ID!
+  title: String!
+  alertType: String!
+  read: Boolean!
+  createdAt: String!
+}
+
+type PlatformReportsSummary {
+  mrr: String!
+  activeApps: Int!
+  pausedApps: Int!
+}
+
+type User {
+  id: ID!
+  username: String!
+  email: String
+  displayName: String
+  status: String!
+}
+
+type AuthPayload {
+  user: User!
+  accessToken: String!
+  refreshToken: String!
+  expiresIn: Int!
+  tokenType: String!
+}
+
+type Notification {
+  id: ID!
+  title: String!
+  body: String!
+  read: Boolean!
+  createdAt: String!
+}
+
+input RegisterInput {
+  username: String!
+  email: String!
+  password: String!
+  displayName: String
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateNotificationInput {
+  title: String!
+  body: String!
+}
+
+input CreatePlatformAppInput {
+  name: String!
+  tenantId: String!
+  owner: String
+}
+
+
+"""
+One row of a tenant's agent-credential registry (mirrors AgentCredentialDTO).
+"""
+type AgentCredential {
+  id: ID!
+  agentId: String!
+  """The person answerable for what this agent writes (ADR-013 §2)."""
+  principalId: String!
+  """Copied off the minter — an agent cannot ask for a role (補裁 O-3)."""
+  tenantRole: String!
+  allowedTypes: [String!]!
+  expiresAt: String!
+  revokedAt: String
+  createdAt: String!
+  """
+  Computed by the domain API and passed through, not re-derived here.
+
+  `revokedAt == null` and "usable" are different questions: a credential that
+  expired last week is not revoked and is not active. Deriving this in the BFF
+  would put a second clock in the room, and the one that decides whether the
+  next request is refused is not this one.
+  """
+  active: Boolean!
+}
+
+"""
+The mint response — the ONLY time the token is ever returned.
+
+`agent_credentials` stores neither the token nor a hash of it (補裁 O-1), so
+there is no second chance to read it and no field that could offer one.
+"""
+type IssuedAgentCredential {
+  id: ID!
+  token: String!
+  agentId: String!
+  allowedTypes: [String!]!
+  expiresAt: String!
+}
+
+input IssueAgentCredentialInput {
+  agentId: String!
+  """
+  The role the credential will carry, bounded by the CALLER's own role
+  (ADR-013 補裁 S-1): owner may grant admin/editor/viewer, admin may grant
+  editor/viewer, and neither may grant its own.
+
+  Non-null but may be empty, for the same reason allowedTypes is: which values
+  are legal depends on the caller, so the refusal belongs to the domain service
+  and a schema-level enum here would be a second copy of a table that changes.
+  """
+  tenantRole: String!
+  """
+  Non-null but may be empty: an ABSENT list and an EMPTY list must produce the
+  same refusal in the same voice, and that answer lives in the domain service.
+  Making this `[String!]!` and letting `[]` through keeps it there.
+  """
+  allowedTypes: [String!]!
+}

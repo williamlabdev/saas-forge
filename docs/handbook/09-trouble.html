@@ -1,0 +1,27 @@
+<section class="chapter" id="ch9">
+<h2>9. 遇到問題時</h2>
+
+<table>
+<tr><th style="width:38%">現象</th><th>大多是這個原因</th></tr>
+<tr><td><code>schema/plan</code> 回 <code>403</code></td><td>你的角色是 viewer。<code>plan</code> 需要 <code>content:schema:plan</code>,viewer 沒有——連看影響都不行。</td></tr>
+<tr><td><code>GET …/proposals</code> 回 <code>403</code>,但 <code>…/proposals/mine</code> 可以</td><td>你是 editor。這是正常的——審核佇列與「自己送出的提案」是兩條分開授權的端點(見 6.4)。</td></tr>
+<tr><td>提案送出後沒人理,後來變成 <code>expired</code></td><td>七天沒人回答就自動失效。重新送一次即可,結構沒有被動到。</td></tr>
+<tr><td>核准了但不知道提案人有沒有看到</td><td>目前不會主動通知,提案人要自己查 <code>…/proposals/mine</code>。</td></tr>
+<tr><td>Agent 回 <code>403</code></td><td>三種可能:content type 不在 <code>allowed_types</code>、憑證的 <code>tenant_role</code> 不足、或動作本身就不開放給 agent(例如發佈、刪欄位)。</td></tr>
+<tr><td>Agent 回 <code>429</code></td><td>撞到每支 agent 的速率限制。調 <code>AGENT_RATE_LIMIT</code>,或讓 agent 放慢。重發憑證沒有用,限制是綁 agent 名稱的。</td></tr>
+<tr><td>Agent 憑證不見了</td><td>token 只在發放當下顯示一次。撤銷舊的,重發一張。</td></tr>
+<tr><td>API 全部回 401 / 被 gateway 擋</td><td>少帶 <code>X-Gateway-Secret</code>,或值跟部署設定不符。</td></tr>
+<tr><td>本機資料亂了想重來</td><td><code>docker compose down -v &amp;&amp; docker compose up --build -d &amp;&amp; ./scripts/seed-demo.sh</code></td></tr>
+<tr><td>前台讀不到剛寫好的內容</td><td>它還是 <code>draft</code>。delivery edge 只給已發佈的內容。</td></tr>
+</table>
+
+<h3>9.1 上線前的檢查清單</h3>
+<ul>
+<li><code>AUTHZ_MODE</code> 設成 <code>rbac</code> 或 <code>opa</code>(不能是 <code>allow</code>)</li>
+<li><code>AUTH_DEV_HEADERS=false</code></li>
+<li>換掉 <code>docker-compose.yml</code> 裡所有 <code>*_HEX</code> 測試密鑰</li>
+<li>設定 <code>GATEWAY_SECRET</code>,並確認 domain API 沒有直接暴露在公開網路上</li>
+<li>視流量設定 <code>AGENT_RATE_LIMIT</code>(預設 0 代表<strong>不限制</strong>)</li>
+<li>盤點一次已發放的 agent 憑證,撤銷不再使用的</li>
+</ul>
+</section>

@@ -1,0 +1,154 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  # 手動重跑的入口:改 secret / 換 runner 環境都不會產生 commit,
+  # 沒有這個入口想重跑就只能推假 commit。
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Vet
+        run: go vet ./...
+      - name: Unit tests
+        run: go test ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          # Pinned, not `latest`. With `latest` this job turns red on a release
+          # nobody here made: the 11 findings fixed on 2026-08-04 arrived that
+          # way — gosec's G705/G706 taint rules shipped in a version newer than
+          # anything installed locally, so main went red with no code change and
+          # the failure could not be reproduced on a developer machine at all.
+          #
+          # A new linter release is a change to the gate and deserves the same
+          # review as a change to the code. Bump this deliberately, see what the
+          # new rules say, and fix or justify them in that commit.
+          version: v2.12.2
+
+  codegen-fresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # Dependency bumps (e.g. gqlgen) must regenerate; a stale generated.go
+      # can even fail to compile against the new runtime.
+      - name: Regenerate gqlgen + wire
+        # Pin the codegen tools to the module's own dependency versions so the
+        # check regenerates with exactly the runtime each dep bump brings in.
+        run: |
+          GQLGEN_V=$(go list -m -f '{{.Version}}' github.com/99designs/gqlgen)
+          WIRE_V=$(go list -m -f '{{.Version}}' github.com/google/wire)
+          (cd apps/bff && go run github.com/99designs/gqlgen@$GQLGEN_V generate)
+          (cd cmd/server && go run github.com/google/wire/cmd/wire@$WIRE_V)
+      - name: Generated code is up to date
+        run: git diff --exit-code
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Tests with coverage (excludes test/e2e)
+        run: make test-coverage
+      - name: HTML coverage report
+        run: go tool cover -html=coverage.out -o coverage.html
+      - uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: |
+            coverage.out
+            coverage.html
+            coverage-summary.txt
+          retention-days: 14
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.out
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  opa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: OPA policy tests
+        run: make opa-test
+
+  # new-domain-smoke 刻意不放 CI：腳本自身標註「run locally, not in CI」，
+  # 它會改動工作目錄再還原、且與被 bump 的依賴無關卻擋住每個 dependabot PR。
+  # 產生器的守護由開發者本機 `make new-domain-smoke` 負責（動到產生器時跑）。
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: E2E tests (Testcontainers)
+        run: make test-e2e
+
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # No continue-on-error: this job used to swallow its own failure into a
+      # green tick — worse than the web job's skip, which at least said so with
+      # ::warning::. It now gates. The consequence is deliberate: a newly
+      # published stdlib CVE will turn main red with nothing in the diff, and
+      # the fix is to bump the toolchain in go.mod rather than to mute this.
+      - name: Dependency vulnerability scan
+        run: make govulncheck
+
+  # Every image sat on golang:1.23-alpine long after go.mod moved on, and
+  # they still built: each Dockerfile set ENV GOTOOLCHAIN=auto, which overrides
+  # the official image's GOTOOLCHAIN=local and quietly downloads whatever go.mod
+  # asks for. The base image tag was decorative. That ENV is gone now, so the tag
+  # carries weight — a builder older than go.mod dies at `go mod download`
+  # (checked by mutation, not by reading the docs). This job is what makes that
+  # death visible; without it the drift is invisible again, which is how the
+  # 1.23-vs-1.26 gap grew in the first place.
+  # Matrix rather than one sequential job: ~2min builds in series would make
+  # this the critical path of a run that otherwise finishes in three and a half.
+  # The list is deliberately not counted anywhere in this comment — a number
+  # here is a claim that expires the next time an image is added.
+  docker-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dockerfile:
+          - Dockerfile
+          - Dockerfile.bff
+          - Dockerfile.delivery
+          - Dockerfile.migrate
+          - Dockerfile.mcp-mock
+          - Dockerfile.cms-mcp
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build ${{ matrix.dockerfile }}
+        run: docker build -f ${{ matrix.dockerfile }} .

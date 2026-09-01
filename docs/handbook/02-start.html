@@ -1,0 +1,40 @@
+<section class="chapter" id="ch2">
+<h2>2. 開始使用</h2>
+
+<h3>2.1 啟動(本機)</h3>
+<pre><code>cp .env.example .env
+docker compose up --build -d     # Postgres + Domain API + BFF + delivery + MinIO
+./scripts/seed-demo.sh           # 建立示範帳號與範例資料</code></pre>
+
+<p class="note"><strong>console 不在這個 repo 裡。</strong>它是一個獨立的 React + Vite
+專案,沒有開源(見第 4 章)。手上有它的人另開一個終端機跑
+<code>cd ../saas-platform-console &amp;&amp; pnpm dev</code>;沒有的人,下面除了第一列
+以外的服務都照樣起得來,操作走 API 或 GraphQL Playground。</p>
+
+<table>
+<tr><th style="width:34%">服務</th><th style="width:26%">位址</th><th>用途</th></tr>
+<tr><td>Admin console<br><small>(另一個 repo,未開源)</small></td><td><code>localhost:5173</code></td><td>人用的操作介面</td></tr>
+<tr><td>Domain REST API</td><td><code>localhost:8080</code></td><td>API 與 agent 的入口(<code>/health</code> 可探活)</td></tr>
+<tr><td>GraphQL BFF</td><td><code>localhost:4000</code></td><td>console 的聚合層(<code>/playground</code> 僅開發用)</td></tr>
+<tr><td>Delivery edge</td><td><code>localhost:4100</code></td><td>前台讀取已發佈內容</td></tr>
+<tr><td>Postgres</td><td><code>localhost:5433</code></td><td>資料庫</td></tr>
+<tr><td>MinIO</td><td><code>localhost:9000</code> / <code>9001</code></td><td>檔案欄位的物件儲存</td></tr>
+</table>
+
+<h3>2.2 登入</h3>
+<p>系統<strong>沒有預設帳號</strong>。<code>seed-demo.sh</code> 會替你建一個並印出帳密,預設是:</p>
+<table>
+<tr><th style="width:34%">Email</th><td><code>demo@demo.io</code></td></tr>
+<tr><th>Password</th><td><code>DemoPass123</code></td></tr>
+</table>
+<p>要換掉:<code>DEMO_EMAIL=you@x.io DEMO_PASSWORD=Secret123 ./scripts/seed-demo.sh</code></p>
+<p>自己註冊也可以——對 <code>POST /api/v1/users</code> 送出 email / username / password 即可。</p>
+
+<div class="warn"><strong>部署前一定要改掉的兩個開發預設</strong>
+<code>AUTHZ_MODE=allow</code> 與 <code>AUTH_DEV_HEADERS=true</code> 會讓 API 對所有請求放行。上線前設成 <code>AUTHZ_MODE=rbac</code>(或 <code>opa</code>)且 <code>AUTH_DEV_HEADERS=false</code>,並換掉 <code>docker-compose.yml</code> 裡的 <code>*_HEX</code> 測試密鑰。另外,<strong>domain API 不該直接對外網開放</strong>,它預期坐在 BFF 或可信任的 gateway 後面。</div>
+
+<h3>2.3 重置</h3>
+<pre><code>docker compose down -v          # 連資料一起清掉,重跑 migration
+docker compose up --build -d
+./scripts/seed-demo.sh</code></pre>
+</section>

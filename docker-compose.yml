@@ -1,0 +1,235 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      # No baked-in fallbacks for secrets (TKT-R3): missing value = fail-fast.
+      # Set them in .env (copy .env.example) or the environment.
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (see .env.example) — generate with 'openssl rand -hex 32'}"
+      POSTGRES_DB: ${POSTGRES_DB:-users}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # Applies migrations, then exits. Everything that needs the database waits for
+  # it to exit 0.
+  #
+  # This replaces the 29 initdb mounts that used to live on the postgres service
+  # (ADR-012 §6). Those only ran on an EMPTY data directory, so a developer or
+  # environment whose volume predated a migration stayed behind forever, with no
+  # signal — the container was healthy, the app was healthy, and the first
+  # request to touch the new column returned 500 days later.
+  #
+  # An empty volume and an existing one now take the same path, which is the
+  # actual fix; the mount list was only ever a way of not having an applier.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (see .env.example) — generate with 'openssl rand -hex 32'}@postgres:5432/${POSTGRES_DB:-users}?sslmode=disable}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # One shot. `restart: on-failure` would retry a migration that failed for a
+    # reason retrying cannot fix, and hide it as a slow startup.
+    restart: "no"
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp-mock
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  bff:
+    build:
+      context: .
+      dockerfile: Dockerfile.bff
+    restart: unless-stopped
+    environment:
+      BFF_HTTP_ADDR: ${BFF_HTTP_ADDR:-:4000}
+      DOMAIN_API_URL: ${DOMAIN_API_URL:-http://app:8080}
+      # These origins belong to the console, which lives in the SEPARATE
+      # saas-platform-console repo since ADR-016 — nothing in this repo serves
+      # them, so the ports cannot be verified from here. 5173 is its dev server;
+      # 4173 and 4174 are its two Playwright preview origins (static and
+      # api-mode). Without them the console e2e specs fail CORS against this
+      # service. 4174 was missing until ADR-016.
+      BFF_CORS_ORIGINS: ${BFF_CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://127.0.0.1:4173,http://127.0.0.1:4174}
+    ports:
+      - "4000:4000"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  # S3-compatible object storage for media (ADR-005). MinIO here is the dev
+  # stand-in; production points MEDIA_S3_* at AWS S3 / Cloudflare R2 /
+  # Backblaze B2 — same API, so no code changes.
+  minio:
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MEDIA_S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MEDIA_S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Creates the media bucket once MinIO is up, then exits.
+  minio-init:
+    image: minio/mc:RELEASE.2024-09-16T17-43-14Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MEDIA_S3_ACCESS_KEY:-minioadmin} ${MEDIA_S3_SECRET_KEY:-minioadmin} &&
+      mc mb --ignore-existing local/${MEDIA_S3_BUCKET:-media} &&
+      echo 'bucket ready (private — reads go through signed URLs)'
+      "
+
+  # Public content delivery edge (ADR-004). Deliberately NOT given
+  # JWT_SECRET_HEX: it must be unable to mint anything but delivery credentials.
+  delivery:
+    build:
+      context: .
+      dockerfile: Dockerfile.delivery
+    restart: unless-stopped
+    environment:
+      DELIVERY_HTTP_ADDR: ${DELIVERY_HTTP_ADDR:-:4100}
+      DOMAIN_API_URL: ${DOMAIN_API_URL:-http://app:8080}
+      # Its own signing key — must differ from JWT_SECRET_HEX. Missing value =
+      # compose fails fast (same policy as the other secrets, TKT-R3).
+      DELIVERY_JWT_SECRET_HEX: "${DELIVERY_JWT_SECRET_HEX:?set DELIVERY_JWT_SECRET_HEX in .env — generate with 'openssl rand -hex 32'; it MUST differ from JWT_SECRET_HEX}"
+      GATEWAY_SECRET: ${GATEWAY_SECRET:-}
+      DELIVERY_RATE_LIMIT: ${DELIVERY_RATE_LIMIT:-600}
+      DELIVERY_RATE_WINDOW_SECONDS: ${DELIVERY_RATE_WINDOW_SECONDS:-60}
+      DELIVERY_CACHE_MAX_AGE_SECONDS: ${DELIVERY_CACHE_MAX_AGE_SECONDS:-0}
+    ports:
+      - "4100:4100"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # The CMS's MCP server (ADR-013 step 6). Named cms-mcp because the service
+  # `mcp` above is the userstate mock, which collides with Model Context
+  # Protocol in name only.
+  #
+  # No credential is configured, and that is the design: the HTTP transport
+  # takes each caller's own bearer and forwards it. Setting CMS_AGENT_TOKEN
+  # here would make every caller that forgot its Authorization header act as
+  # one shared principal, so the process refuses to start with both.
+  cms-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.cms-mcp
+    restart: unless-stopped
+    environment:
+      CMS_MCP_HTTP_ADDR: ${CMS_MCP_HTTP_ADDR:-:4200}
+      DOMAIN_API_URL: ${DOMAIN_API_URL:-http://app:8080}
+      GATEWAY_SECRET: ${GATEWAY_SECRET:-}
+      CMS_MCP_DEFAULT_LIMIT: ${CMS_MCP_DEFAULT_LIMIT:-10}
+      CMS_MCP_MAX_LIMIT: ${CMS_MCP_MAX_LIMIT:-50}
+    ports:
+      - "4200:4200"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "${DATABASE_URL:-postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env (see .env.example) — generate with 'openssl rand -hex 32'}@postgres:5432/${POSTGRES_DB:-users}?sslmode=disable}"
+      HTTP_ADDR: ${HTTP_ADDR:-:8080}
+      # The guards (TKT-R2) are armed by default — APP_ENV's code default is
+      # production, and dev headers / allow-mode then refuse to boot. This line
+      # is the explicit opt-out that makes `docker compose up` work on a laptop.
+      APP_ENV: ${APP_ENV:-development}
+      AUTHZ_MODE: ${AUTHZ_MODE:-allow}
+      # No baked-in secrets: the server refuses to start on a publicly-known
+      # throwaway secret (TKT-R3). See SECURITY.md.
+      # missing value = compose fails fast. Dev values live in .env.
+      JWT_SECRET_HEX: "${JWT_SECRET_HEX:?set JWT_SECRET_HEX in .env — generate with 'openssl rand -hex 32'}"
+      # The Domain API needs the delivery key to VERIFY the edge's credentials.
+      # Unset = delivery feature off (tokens from the edge are refused), which is
+      # the safe default — there is deliberately no single-key fallback.
+      DELIVERY_JWT_SECRET_HEX: ${DELIVERY_JWT_SECRET_HEX:-}
+      # Media object storage (ADR-005). Unset endpoint = media feature off.
+      MEDIA_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT:-minio:9000}
+      MEDIA_S3_BUCKET: ${MEDIA_S3_BUCKET:-media}
+      MEDIA_S3_ACCESS_KEY: ${MEDIA_S3_ACCESS_KEY:-minioadmin}
+      MEDIA_S3_SECRET_KEY: ${MEDIA_S3_SECRET_KEY:-minioadmin}
+      MEDIA_S3_USE_SSL: ${MEDIA_S3_USE_SSL:-false}
+      AUTH_DEV_HEADERS: ${AUTH_DEV_HEADERS:-true}
+      MCP_BASE_URL: ${MCP_BASE_URL:-http://mcp:8081}
+      OUTBOX_POLL_SECONDS: ${OUTBOX_POLL_SECONDS:-2}
+      # Content limits now come from the tenant's plan (TKT-R4b plans table),
+      # not env — the R4a CONTENT_MAX_* vars were removed.
+      # Per-agent rate limit (ADR-013 補裁 S-2 題一); blank = no cap, which is
+      # the default because the limiter is in-process and N replicas multiply
+      # it. See .env.example before setting a number you intend to promise.
+      AGENT_RATE_LIMIT: ${AGENT_RATE_LIMIT:-}
+      AGENT_RATE_WINDOW_SEC: ${AGENT_RATE_WINDOW_SEC:-60}
+      # Require requests to arrive via a gateway carrying X-Gateway-Secret
+      # (TKT-R7); blank = disabled (dev / network boundary / mTLS instead).
+      GATEWAY_SECRET: ${GATEWAY_SECRET:-}
+      ENCRYPTION_KEY_HEX: "${ENCRYPTION_KEY_HEX:?set ENCRYPTION_KEY_HEX in .env — generate with 'openssl rand -hex 32'}"
+      BLIND_INDEX_PEPPER_HEX: "${BLIND_INDEX_PEPPER_HEX:?set BLIND_INDEX_PEPPER_HEX in .env — generate with 'openssl rand -hex 32'}"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Not just "postgres is up" — "the schema is current". The app refuses to
+      # start against a database that is behind (ADR-012 §4), so without this it
+      # would crash-loop until migrate happened to finish.
+      migrate:
+        condition: service_completed_successfully
+      mcp:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  pgdata:
+  miniodata:

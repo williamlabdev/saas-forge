@@ -1,0 +1,48 @@
+<section class="chapter" id="ch6">
+<h2>6. 改結構:Plan、Apply、提案</h2>
+<p class="lead">改內容是日常,改<em>結構</em>不是。刪一個欄位會讓既有內容裡的那份資料回不來,所以這一章的所有機制都在回答同一個問題:<strong>按下去之前,你知不知道會弄丟什麼?</strong></p>
+
+<h3>6.1 一律先 Plan</h3>
+<p>把你想要的目標結構送到 <code>POST /api/v1/content/schema/plan</code>。Plan <strong>不寫入任何東西</strong>,它拿你的新結構跟現況比對,把差異拆成一步一步,並替每一步標上等級:</p>
+<table>
+<tr><th style="width:18%">等級</th><th style="width:24%">意思</th><th>例子</th></tr>
+<tr><td><code>additive</code></td><td>一定可以套用</td><td>新增欄位、改顯示標籤、新增 content type</td></tr>
+<tr><td><code>guarded</code></td><td>要看現有資料才知道行不行</td><td>把欄位改成必填、換型別——有既有資料就可能擋下</td></tr>
+<tr><td><code>refused</code></td><td>結構上不可能,不會執行</td><td>目標狀態本身矛盾</td></tr>
+</table>
+<p>Plan 同時會告訴你每一步<strong>牽動幾筆 entry</strong>。這個數字就是「弄丟什麼」的具體答案。要拿現況當起點,先 <code>GET /api/v1/content/schema/export</code>。</p>
+<div class="tip"><strong>Plan 是所有角色都能用的</strong>包含 editor(它自己一個權限 <code>content:schema:plan</code>,與寫入分開)。理由很單純:一個看不到 plan 的人,不可能知道自己送出的提案在說什麼。</div>
+
+<h3>6.2 接下來能做什麼,取決於你的角色</h3>
+<p>拿到 plan 之後,同一份變更有兩條出口,你走得了哪一條由角色決定:</p>
+<table>
+<tr><th style="width:24%">角色</th><th style="width:38%">出口</th><th>結果</th></tr>
+<tr><td><span class="role own">owner</span><span class="role own">admin</span></td><td><code>POST /content/schema/apply</code></td><td>直接執行。</td></tr>
+<tr><td><span class="role edt">editor</span></td><td><code>POST /content/schema/proposals</code></td><td>送出提案,等 owner / admin 回答。</td></tr>
+<tr><td><span class="role vw">viewer</span></td><td>兩條都不行</td><td>連 <code>plan</code> 都要 <code>content:schema:plan</code>,viewer 沒有。</td></tr>
+</table>
+<div class="note"><strong>給接前端的人的一條版型建議</strong>開發用的 console 把這兩條出口做成緊貼 diff 下方的兩顆按鈕(<em>Apply these changes</em> / <em>Send for approval</em>),依角色只出現其中一顆。重點不在按鈕,在於<strong>你按下去的東西和你剛剛看的東西要在同一個畫面上</strong>——plan 的回應與 apply 的請求是分開的兩次呼叫,中間隔了多遠,是介面自己的選擇。</div>
+
+<h3>6.3 提案的一生</h3>
+<ol class="steps">
+<li>editor 送 <code>POST /content/schema/proposals</code>,系統存下這次變更。</li>
+<li>owner / admin 在 <code>GET /content/schema/proposals</code> 的待審佇列看到它,附帶有幾項變更、動到哪些型別、以及<strong>什麼時候過期</strong>。</li>
+<li>審核者取 <code>GET /content/schema/proposals/{id}</code> 展開完整 diff,再送 <code>…/{id}/approve</code> 或 <code>…/{id}/reject</code>。核准即執行,沒有第二道確認。</li>
+<li>提案人查 <code>GET /content/schema/proposals/mine</code>,看得到狀態、到期時間,以及<em>自己視角的</em> diff。</li>
+</ol>
+<table>
+<tr><th style="width:20%">狀態</th><th>意思</th></tr>
+<tr><td><code>pending</code></td><td>還在等人回答</td></tr>
+<tr><td><code>approved</code></td><td>已核准並執行</td></tr>
+<tr><td><code>rejected</code></td><td>被駁回,結構沒有變動</td></tr>
+<tr><td><code>expired</code></td><td>七天內沒人回答,自動失效;要重送一次</td></tr>
+</table>
+<div class="note"><strong>提案有七天壽命</strong>過期是<em>伺服器</em>算的,不是客戶端算的——所以不會出現「你的畫面說還沒過期、後端說過期了」這種兩個時鐘的狀況。過期的提案不會自動執行,也不會自動重送。</div>
+
+<h3>6.4 提案人看到的 diff 和審核者不同</h3>
+<p>審核者(<code>…/proposals/{id}</code>)看到的是<strong>完整範圍</strong>的變更計畫。提案人(<code>…/proposals/mine/{id}</code>)看到的是<strong>他自己權限範圍內</strong>的那一份。同一則提案,兩種視角,系統分開保存,不會把審核者的視野漏給提案人——這是兩條端點而不是一條加參數的原因。</p>
+<p>少數早期(在此機制上線前)由 agent 送出的提案沒有保留提案人視角,那一列會直說「沒有保留 diff」,而不是拿審核者的版本充數。</p>
+
+<h3>6.5 目前的兩個已知限制</h3>
+<div class="warn"><strong>一、核准或駁回不會主動通知提案人</strong>提案人要自己回頭查 <code>…/proposals/mine</code>。系統目前沒有任何 email 管道,站內通知的觸及範圍和「自己回來看」是一樣的,所以這件事被刻意留著沒做。<br><strong>二、提案繞不過權限</strong>提案是一條審核軌跡,不是一道權限門。直接呼叫 <code>schema/apply</code> 的人,是被<em>權限</em>擋下來的,不是被「沒有提案」擋下來的。</div>
+</section>

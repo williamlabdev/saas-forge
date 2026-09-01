@@ -1,0 +1,47 @@
+# syntax=docker/dockerfile:1
+#
+# CMS MCP server (ADR-013 step 6): the agent-facing transport adapter.
+#
+# It is the thinnest image in the platform on purpose. No database driver is
+# reachable from it, no signing key is handed to it, and it can mint nothing —
+# so a compromise here yields whatever the caller's own credential already
+# allowed, which the Domain API re-checks on every request regardless.
+#
+# The image serves the streamable HTTP transport, because a container is a
+# long-running service with many callers. The stdio transport (the same binary
+# with CMS_MCP_HTTP_ADDR unset) is for an MCP client that launches the server
+# locally and is not what this image is for.
+#
+# GOTOOLCHAIN is deliberately NOT set to auto here. That line used to make the
+# base image tag decorative — a Dockerfile pinned to an old Go would silently
+# download a newer toolchain and build anyway — so the tag below is the version
+# that actually compiles this binary, and raising go.mod's toolchain means
+# raising it here too.
+
+FROM golang:1.26-alpine AS builder
+
+RUN apk add --no-cache ca-certificates git
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/cms-mcp ./apps/cmsmcp/cmd/cms-mcp
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates \
+    && adduser -D -H -u 10001 appuser
+
+WORKDIR /app
+
+COPY --from=builder /out/cms-mcp /app/cms-mcp
+
+USER appuser
+
+EXPOSE 4200
+
+ENTRYPOINT ["/app/cms-mcp"]

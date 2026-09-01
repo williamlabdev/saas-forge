@@ -1,0 +1,460 @@
+{
+  "$defs": {
+    "EntityField": {
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "string",
+            "text",
+            "richtext",
+            "number",
+            "boolean",
+            "enum",
+            "date",
+            "datetime",
+            "relation",
+            "file"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "multiple": {
+          "default": false,
+          "title": "Multiple",
+          "type": "boolean"
+        },
+        "enum_values": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum Values"
+        },
+        "read_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Read Roles",
+          "type": "array"
+        },
+        "write_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Write Roles",
+          "type": "array"
+        },
+        "relation_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relation Entity"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "key",
+        "type"
+      ],
+      "title": "EntityField",
+      "type": "object"
+    },
+    "EntitySchema": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/EntityField"
+          },
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "read_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Read Roles",
+          "type": "array"
+        },
+        "write_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Write Roles",
+          "type": "array"
+        },
+        "own_only_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Own Only Roles",
+          "type": "array"
+        },
+        "state_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StateModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "EntitySchema",
+      "type": "object"
+    },
+    "PageUiBinding": {
+      "properties": {
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "list",
+            "create",
+            "edit",
+            "settings",
+            "create_project",
+            "detail",
+            "booking",
+            "metrics",
+            "review"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "access": {
+          "default": "authenticated",
+          "enum": [
+            "public",
+            "authenticated"
+          ],
+          "title": "Access",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "resource_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Entity"
+        },
+        "capacity_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Field"
+        },
+        "source_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Entity"
+        },
+        "aggregate": {
+          "anyOf": [
+            {
+              "enum": [
+                "count",
+                "sum",
+                "avg"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregate"
+        },
+        "measure_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Measure Field"
+        },
+        "group_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group By"
+        },
+        "chart": {
+          "anyOf": [
+            {
+              "enum": [
+                "line",
+                "bar",
+                "kpi"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Chart"
+        }
+      },
+      "required": [
+        "entity",
+        "mode"
+      ],
+      "title": "PageUiBinding",
+      "type": "object"
+    },
+    "StateModel": {
+      "description": "Stateful/workflow primitive (entity-level, unlike booking/metrics which are\nbinding-level): declares an entity's lifecycle. The generator EXPRESSES it; a\ndownstream runtime enforces transitions/guards. `field` names the enum status\nfield whose enum_values must equal `states` (enforced by g4).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "initial": {
+          "title": "Initial",
+          "type": "string"
+        },
+        "states": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "States",
+          "type": "array"
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/$defs/StateTransition"
+          },
+          "title": "Transitions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "field",
+        "initial",
+        "states"
+      ],
+      "title": "StateModel",
+      "type": "object"
+    },
+    "StateTransition": {
+      "properties": {
+        "from_state": {
+          "title": "From State",
+          "type": "string"
+        },
+        "to_state": {
+          "title": "To State",
+          "type": "string"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_state",
+        "to_state",
+        "action"
+      ],
+      "title": "StateTransition",
+      "type": "object"
+    }
+  },
+  "description": "Generated admin app entity model for dynamic forms, tables, and backend storage.",
+  "properties": {
+    "version": {
+      "default": "0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "app_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "App Id"
+    },
+    "locale": {
+      "default": "zh-TW",
+      "title": "Locale",
+      "type": "string"
+    },
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/EntitySchema"
+      },
+      "minItems": 1,
+      "title": "Entities",
+      "type": "array"
+    },
+    "ui_bindings": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PageUiBinding"
+      },
+      "description": "page_path → entity binding (aligns with wireframe_pack ui_specs paths)",
+      "title": "Ui Bindings",
+      "type": "object"
+    }
+  },
+  "required": [
+    "entities"
+  ],
+  "title": "AdminAppSchema",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spec-generator.local/schemas/admin-app.schema.json"
+}

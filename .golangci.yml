@@ -1,0 +1,31 @@
+# golangci-lint v2 config — starter quality gate for SaaSForge.
+# Linters: govet, staticcheck, errcheck, ineffassign, unused (default set) + gosec.
+# Generated code (wire, sqlc, mocks) and tests are scoped down to keep the gate
+# actionable rather than noisy. Tighten over time.
+version: "2"
+
+run:
+  timeout: 5m
+
+# Report every issue — a gate that silently truncates (golangci-lint defaults to
+# max-same-issues: 3) hides real findings.
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  default: standard # errcheck, govet, ineffassign, staticcheck, unused
+  enable:
+    - gosec
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - std-error-handling
+    rules:
+      # Generated code: wire, sqlc, mockery, gqlgen — not ours to lint.
+      - path: (wire_gen\.go|_gen\.go|\.pb\.go|generated\.go|mock_.*\.go|_mock\.go)
+        linters: [gosec, errcheck, staticcheck, govet, ineffassign, unused]
+      # Tests: allow unchecked errors and relax gosec (fixtures, temp files, weak rng).
+      - path: _test\.go
+        linters: [errcheck, gosec]

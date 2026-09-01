@@ -1,0 +1,41 @@
+schema:
+  - graph/*.graphql
+exec:
+  filename: graph/generated.go
+  package: graph
+model:
+  filename: graph/models_gen.go
+  package: graph
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+  filename_template: "{name}.resolvers.go"
+autobind: []
+models:
+  Viewer:
+    fields:
+      me:
+        resolver: true
+      notifications:
+        resolver: true
+  PlatformOps:
+    fields:
+      apps:
+        resolver: true
+      billing:
+        resolver: true
+      invoices:
+        resolver: true
+      staff:
+        resolver: true
+      alerts:
+        resolver: true
+      reports:
+        resolver: true
+  PlatformMutations:
+    fields:
+      createApp:
+        resolver: true
+      updateAppStatus:
+        resolver: true

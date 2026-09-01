@@ -1,0 +1,86 @@
+/* SaaSForge CMS 使用手冊 — 列印版型(headless Chrome → A4 PDF) */
+@page { size: A4; margin: 17mm 16mm 15mm; }
+@page :first { margin: 0; }
+
+:root{
+  --ink:#16181d; --mute:#5c6370; --line:#dfe2e8; --soft:#f6f7f9;
+  --accent:#1f4fd8; --warn:#8a5300; --danger:#a1262c;
+}
+*{box-sizing:border-box}
+html{font-size:10pt}
+body{
+  margin:0; color:var(--ink);
+  font-family:"Helvetica Neue",Helvetica,"Heiti TC","Hiragino Sans",sans-serif;
+  line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+
+/* ---- 封面 ---- */
+.cover{
+  height:297mm; padding:38mm 26mm 26mm; display:flex; flex-direction:column;
+  page-break-after:always; background:linear-gradient(160deg,#0f1f45 0%,#1f4fd8 100%);
+  color:#fff;
+}
+.cover .kicker{font-size:11pt;letter-spacing:.18em;text-transform:uppercase;opacity:.75}
+.cover h1{font-size:34pt;line-height:1.2;margin:14mm 0 4mm;font-weight:700}
+.cover .sub{font-size:13pt;opacity:.9;max-width:120mm}
+.cover .meta{margin-top:auto;font-size:9.5pt;opacity:.8;border-top:1px solid rgba(255,255,255,.3);padding-top:5mm}
+.cover .meta div{margin:.25em 0}
+
+/* ---- 目錄 ---- */
+.toc{page-break-after:always}
+.toc h2{border:0;margin-top:0}
+.toc ol{list-style:none;padding:0;counter-reset:c}
+.toc > ol > li{counter-increment:c;margin:.45em 0;font-weight:600}
+.toc > ol > li::before{content:counter(c) ". ";color:var(--accent)}
+.toc ul{list-style:none;padding-left:1.6em;margin:.2em 0;font-weight:400;color:var(--mute);font-size:9.5pt}
+
+/* ---- 標題 ---- */
+h2{font-size:17pt;margin:0 0 .6em;padding-bottom:.3em;border-bottom:2px solid var(--accent);page-break-after:avoid}
+h3{font-size:12.5pt;margin:1.5em 0 .5em;page-break-after:avoid}
+h4{font-size:10.5pt;margin:1.2em 0 .4em;color:var(--mute);page-break-after:avoid}
+section.chapter{page-break-before:always}
+p{margin:.55em 0}
+
+/* ---- 表格 ---- */
+table{width:100%;border-collapse:collapse;margin:.8em 0;font-size:9pt;page-break-inside:auto}
+tr{page-break-inside:avoid}
+thead{display:table-header-group}
+th,td{border:1px solid var(--line);padding:3.5px 7px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600}
+td code,th code{font-size:8.5pt}
+
+/* ---- 程式碼 ---- */
+code{font-family:Menlo,Consolas,"Heiti TC",monospace;font-size:9pt;background:var(--soft);
+     padding:1px 4px;border-radius:3px;word-break:break-word}
+pre{background:#12141a;color:#e6e8ee;padding:10px 12px;border-radius:5px;overflow:hidden;
+    font-size:8.5pt;line-height:1.55;page-break-inside:avoid;white-space:pre-wrap;word-break:break-word}
+pre code{background:none;color:inherit;padding:0;font-size:8.5pt}
+
+/* ---- 提示框 ---- */
+.note,.warn,.tip{border-left:3px solid var(--accent);background:var(--soft);
+  padding:7px 11px;margin:.75em 0;font-size:9.5pt;page-break-inside:avoid;border-radius:0 4px 4px 0}
+.warn{border-color:var(--warn);background:#fdf6e9}
+.tip{border-color:#2e7d4f;background:#eef7f1}
+/* 只有開頭那個 strong 是提示框的標題。原本選到框內所有 strong,
+   於是內文裡任何一處強調都會被打斷成獨立一行。 */
+.note>strong:first-child,.warn>strong:first-child,.tip>strong:first-child{display:block;margin-bottom:.2em}
+
+/* ---- 步驟 ---- */
+ol.steps{padding-left:1.3em}
+ol.steps > li{margin:.5em 0;page-break-inside:avoid}
+
+/* ---- 角色徽章 ---- */
+.role{display:inline-block;font-size:8pt;padding:1px 6px;border-radius:9px;
+      border:1px solid var(--line);background:#fff;margin-right:3px;white-space:nowrap}
+.role.own{border-color:#1f4fd8;color:#1f4fd8}
+.role.edt{border-color:#2e7d4f;color:#2e7d4f}
+.role.vw{border-color:#8a5300;color:#8a5300}
+
+ul{padding-left:1.25em;margin:.5em 0}
+li{margin:.22em 0}
+.lead{font-size:11pt;color:var(--mute);margin-bottom:1.2em}
+hr{border:0;border-top:1px solid var(--line);margin:1.6em 0}
+
+/* API 參考的表格列數多,單獨縮一級字 */
+#ch8 table{font-size:8.5pt}
+#ch8 td code,#ch8 th code{font-size:8pt}

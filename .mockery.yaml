@@ -1,0 +1,11 @@
+with-expecter: true
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: mocks
+packages:
+  github.com/williamlabdev/saas-forge/internal/user/repository:
+    interfaces:
+      UserRepository:
+  github.com/williamlabdev/saas-forge/internal/user/service:
+    interfaces:
+      UserService:

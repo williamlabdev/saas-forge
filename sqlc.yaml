@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "internal/user/repository/queries"
+    schema: "internal/user/migrations"
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/user/repository/sqlc"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: "user_status"
+            go_type: "string"
