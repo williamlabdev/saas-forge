@@ -10,13 +10,19 @@
 ```
 
 輸出 `SaaSForge-CMS-使用手冊.pdf`(A4)。用 headless Chrome 直接列印,**不需要 pandoc /
-LaTeX / wkhtmltopdf 這類文件工具鏈**——但需要 Google Chrome,而且路徑目前寫死成 macOS
-的 `/Applications/Google Chrome.app/...`。在別的系統上請改 `build.sh` 裡的 `CHROME`。
+LaTeX / wkhtmltopdf 這類文件工具鏈**——但需要 Chrome 或 Chromium。`build.sh` 會依序找
+macOS 的 `/Applications/Google Chrome.app/...` 與 `/Applications/Chromium.app/...`,再找
+`PATH` 上的 `google-chrome`、`google-chrome-stable`、`chromium`、`chromium-browser`;
+都找不到就報錯中止,不會默默產出半成品。裝在別的位置就自己指:
+
+```bash
+CHROME=/path/to/chrome ./docs/handbook/build.sh
+```
 
 `handbook.html` 與 PDF 都在 `.gitignore` 裡(它們是產出物),所以**不會進版控,也不會
 出現在公開 repo** ——公開副本只有各章 `.html` 與這支 `build.sh`,PDF 由讀者自己產。
-這也是為什麼上面的 `CHROME` 路徑值得改成能跨系統找得到:對公開讀者來說,那是拿到
-成品的唯一途徑。
+那就是上面那組跨系統搜尋存在的理由:對拿到公開副本的人來說,跑這支腳本是取得成品的
+唯一途徑,寫死一條 macOS 路徑等於把他們擋在門外。
 
 ## 檔案
 
