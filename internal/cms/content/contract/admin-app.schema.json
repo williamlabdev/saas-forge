@@ -1,0 +1,592 @@
+{
+  "$defs": {
+    "ComponentSchema": {
+      "description": "A reusable, tenant-scoped group of fields referenced by EntityField.type == 'component' (ADR-020). Sub-fields may not be components, unique, or carry read_roles/write_roles.",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/EntityField"
+          },
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "ComponentSchema",
+      "type": "object"
+    },
+    "EntityField": {
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "string",
+            "text",
+            "richtext",
+            "number",
+            "boolean",
+            "enum",
+            "date",
+            "datetime",
+            "relation",
+            "file",
+            "component",
+            "dynamiczone"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "required": {
+          "default": false,
+          "title": "Required",
+          "type": "boolean"
+        },
+        "multiple": {
+          "default": false,
+          "title": "Multiple",
+          "type": "boolean"
+        },
+        "enum_values": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum Values"
+        },
+        "read_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Read Roles",
+          "type": "array"
+        },
+        "write_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Write Roles",
+          "type": "array"
+        },
+        "relation_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relation Entity"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "name of the reusable component this field takes its shape from; required when type is 'component', refused otherwise (ADR-020)",
+          "title": "Component"
+        },
+        "components": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "names of the components a dynamic zone accepts; required (non-empty) when type is 'dynamiczone', refused otherwise. Each item of the value names its component under '__component' and must name one of these (ADR-020 Amendment 1)",
+          "title": "Components"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "unique": {
+          "default": false,
+          "description": "the value must be one of a kind among the entries of this type, per locale, counting both the working copy and the live snapshot; scalar string/number/date/datetime only, never on a multiple field and never on a component sub-field (ADR-007 Amendment 1)",
+          "title": "Unique",
+          "type": "boolean"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "a fixed named rule the value must satisfy; the one format is 'slug' (lowercase ASCII letters and digits in hyphen-separated runs), and it is allowed on type 'string' only",
+          "title": "Format"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "a regular expression the WHOLE value must match — the anchors are implied, so '[a-z]+' means '^[a-z]+$'. RE2 syntax (no lookaround, no backreferences), at most 512 characters, on type 'string' or 'text'; applied to every element of a multiple field",
+          "title": "Pattern"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "lower bound: a length in characters on 'string'/'text' (a non-negative whole number), the value itself on 'number'",
+          "title": "Min"
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "upper bound, read the same way as min; min may not exceed max",
+          "title": "Max"
+        }
+      },
+      "required": [
+        "key",
+        "type"
+      ],
+      "title": "EntityField",
+      "type": "object"
+    },
+    "EntitySchema": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/EntityField"
+          },
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "read_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Read Roles",
+          "type": "array"
+        },
+        "write_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Write Roles",
+          "type": "array"
+        },
+        "own_only_roles": {
+          "default": [],
+          "items": {
+            "enum": [
+              "owner",
+              "admin",
+              "editor",
+              "viewer"
+            ],
+            "type": "string"
+          },
+          "title": "Own Only Roles",
+          "type": "array"
+        },
+        "state_model": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/StateModel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "title": "EntitySchema",
+      "type": "object"
+    },
+    "PageUiBinding": {
+      "properties": {
+        "entity": {
+          "title": "Entity",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "list",
+            "create",
+            "edit",
+            "settings",
+            "create_project",
+            "detail",
+            "booking",
+            "metrics",
+            "review"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "access": {
+          "default": "authenticated",
+          "enum": [
+            "public",
+            "authenticated"
+          ],
+          "title": "Access",
+          "type": "string"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "resource_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resource Entity"
+        },
+        "capacity_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capacity Field"
+        },
+        "source_entity": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Entity"
+        },
+        "aggregate": {
+          "anyOf": [
+            {
+              "enum": [
+                "count",
+                "sum",
+                "avg"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aggregate"
+        },
+        "measure_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Measure Field"
+        },
+        "group_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group By"
+        },
+        "chart": {
+          "anyOf": [
+            {
+              "enum": [
+                "line",
+                "bar",
+                "kpi"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Chart"
+        }
+      },
+      "required": [
+        "entity",
+        "mode"
+      ],
+      "title": "PageUiBinding",
+      "type": "object"
+    },
+    "StateModel": {
+      "description": "Stateful/workflow primitive (entity-level, unlike booking/metrics which are\nbinding-level): declares an entity's lifecycle. The generator EXPRESSES it; a\ndownstream runtime enforces transitions/guards. `field` names the enum status\nfield whose enum_values must equal `states` (enforced by g4).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "initial": {
+          "title": "Initial",
+          "type": "string"
+        },
+        "states": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "States",
+          "type": "array"
+        },
+        "transitions": {
+          "items": {
+            "$ref": "#/$defs/StateTransition"
+          },
+          "title": "Transitions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "field",
+        "initial",
+        "states"
+      ],
+      "title": "StateModel",
+      "type": "object"
+    },
+    "StateTransition": {
+      "properties": {
+        "from_state": {
+          "title": "From State",
+          "type": "string"
+        },
+        "to_state": {
+          "title": "To State",
+          "type": "string"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from_state",
+        "to_state",
+        "action"
+      ],
+      "title": "StateTransition",
+      "type": "object"
+    }
+  },
+  "description": "Generated admin app entity model for dynamic forms, tables, and backend storage.",
+  "properties": {
+    "version": {
+      "default": "0.1",
+      "title": "Version",
+      "type": "string"
+    },
+    "app_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "App Id"
+    },
+    "locale": {
+      "default": "zh-TW",
+      "title": "Locale",
+      "type": "string"
+    },
+    "components": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ComponentSchema"
+      },
+      "title": "Components",
+      "type": "array"
+    },
+    "entities": {
+      "items": {
+        "$ref": "#/$defs/EntitySchema"
+      },
+      "minItems": 1,
+      "title": "Entities",
+      "type": "array"
+    },
+    "ui_bindings": {
+      "additionalProperties": {
+        "$ref": "#/$defs/PageUiBinding"
+      },
+      "description": "page_path → entity binding (aligns with wireframe_pack ui_specs paths)",
+      "title": "Ui Bindings",
+      "type": "object"
+    }
+  },
+  "required": [
+    "entities"
+  ],
+  "title": "AdminAppSchema",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spec-generator.local/schemas/admin-app.schema.json"
+}

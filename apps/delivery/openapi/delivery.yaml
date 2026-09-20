@@ -1,0 +1,468 @@
+openapi: 3.1.0
+info:
+  title: SaaS Platform Content Delivery API
+  version: "1"
+  description: |
+    The public, unauthenticated read surface of the platform's CMS (ADR-004
+    option A). Every response here is content a tenant deliberately published —
+    a working (draft) copy is never reachable through this API, except through
+    a scoped `preview_token` on the single-entry route.
+
+    This edge is a thin, stateless proxy in front of the Domain API. It does
+    not accept credentials from callers and does not require any: the tenant
+    is a path segment, not a secret, because guessing it is not an isolation
+    failure — the content behind it is public by the tenant's own choice to
+    publish it.
+
+    This document is generated to match the edge's actual routes and query
+    parameters exactly (see `apps/delivery/internal/handler/openapi_test.go`,
+    which fails the build if the two drift apart) — it is not aspirational.
+  license:
+    name: Proprietary
+externalDocs:
+  description: CMS handbook — populate, filters and audience rules in full
+  url: /docs/handbook/08-api.html
+servers:
+  - url: /
+    description: The delivery edge itself — same origin the client already called.
+tags:
+  - name: entries
+    description: Published content entries.
+  - name: media
+    description: Media asset delivery.
+  - name: meta
+    description: Health and this specification.
+
+# This edge takes no credential from callers at all (see info.description) —
+# `security: []` here is the document-wide default, and every operation below
+# repeats it explicitly rather than relying on this alone, so a reader of any
+# one operation sees the same fact without having to scroll up. It is not a
+# placeholder for a scheme to add later: authorization for what a tenant has
+# published lives entirely in the decision to publish it, upstream of this
+# API; a token that scopes a caller to more than that (preview) rides as an
+# ordinary query parameter (`preview_token`), not as this document's auth.
+security: []
+
+paths:
+  /health:
+    get:
+      operationId: health
+      security: []
+      tags: [meta]
+      summary: Liveness probe.
+      description: >-
+        Always 200 with the plain-text body `ok` when the process is up. Not
+        cacheable, carries no JSON body, and is not tenant-scoped.
+      responses:
+        "200":
+          description: The process is serving traffic.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  /v1/openapi.json:
+    get:
+      operationId: getOpenAPIJSON
+      security: []
+      tags: [meta]
+      summary: This specification, as JSON.
+      description: >-
+        Served from an embedded copy of the same source as
+        `/v1/openapi.yaml` — the two are never out of sync because one is
+        generated from the other at build time, not maintained twice.
+      responses:
+        "200":
+          description: The OpenAPI 3.1 document.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /v1/openapi.yaml:
+    get:
+      operationId: getOpenAPIYAML
+      security: []
+      tags: [meta]
+      summary: This specification, as YAML.
+      responses:
+        "200":
+          description: The OpenAPI 3.1 document.
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  /v1/{tenant}/{type}/:
+    get:
+      operationId: listEntries
+      security: []
+      tags: [entries]
+      summary: List published entries of one content type.
+      description: >-
+        Pages by opaque cursor only — this audience cannot request an offset
+        page (`OFFSET_UNSUPPORTED`), because the Domain API refuses offset
+        pagination for a delivery credential outright. Filters, sort, `q` and
+        `fields` are forwarded to and evaluated entirely by the Domain API
+        against the PUBLISHED snapshot; this edge does not itself understand
+        their grammar, and a clause it cannot parse comes back as the
+        upstream's own 400.
+
+
+        `{type}` looks like it could collide with the literal `media` segment
+        in `/v1/{tenant}/media/{id}` below when a tenant names a content type
+        `media` — but the two patterns never actually contend for the same
+        request. This route ends in a required trailing slash with nothing
+        after it (`/v1/{tenant}/{type}/`); the media route ends in a
+        required, non-empty `{id}` segment with no trailing slash
+        (`/v1/{tenant}/media/{id}`). chi resolves a path by SHAPE — segment
+        count and the literal-vs-wildcard content at each position — before
+        registration order or specificity ever come into it, so
+        `GET /v1/acme/media/` (trailing slash, nothing after `media`) can
+        only match this list route, with `type=media`, and
+        `GET /v1/acme/media/123` can only match the media route, with
+        `id=123`. A tenant naming a content type `media` is fully reachable
+        through this route; it just always needs that trailing slash, the
+        same as any other type name.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/type'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/locale'
+        - $ref: '#/components/parameters/cursor'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/fields'
+        - $ref: '#/components/parameters/populate'
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/ifNoneMatch'
+      responses:
+        "200":
+          description: One page of entries.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Cache-Control: { $ref: '#/components/headers/CacheControl' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryList'
+        "304":
+          description: >-
+            The caller's `If-None-Match` matched the current representation —
+            no body, same headers a 200 for this exact page would carry.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Cache-Control: { $ref: '#/components/headers/CacheControl' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+        "502":
+          $ref: '#/components/responses/UpstreamError'
+
+  /v1/{tenant}/{type}/{id}:
+    get:
+      operationId: getEntry
+      security: []
+      tags: [entries]
+      summary: Fetch one entry by id.
+      description: >-
+        With `preview_token`, this is the ONE route that credential may
+        address: it names exactly this entry, ignores every other query
+        parameter, and answers the unpublished working copy in delivery
+        shape — `Cache-Control: private, no-store`, no `ETag`. Without a
+        token this is the ordinary published read, and `populate` is
+        honoured exactly as it is on the list route.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - $ref: '#/components/parameters/type'
+        - name: id
+          in: path
+          required: true
+          description: Entry id (UUID).
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/populate'
+        - $ref: '#/components/parameters/previewToken'
+        - $ref: '#/components/parameters/ifNoneMatch'
+      responses:
+        "200":
+          description: >-
+            The entry. When `preview_token` was supplied, this is the working
+            copy in delivery shape and carries neither `ETag` nor a shared
+            `Cache-Control`.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Cache-Control: { $ref: '#/components/headers/CacheControl' }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        "304":
+          description: The caller's `If-None-Match` matched the current representation.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Cache-Control: { $ref: '#/components/headers/CacheControl' }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+        "502":
+          $ref: '#/components/responses/UpstreamError'
+
+  /v1/{tenant}/media/{id}:
+    get:
+      operationId: getMedia
+      security: []
+      tags: [media]
+      summary: Resolve a media asset to a short-lived signed URL.
+      description: >-
+        Always a `302` redirect to something readable — never a `404` for a
+        rendition that has not finished generating yet; an unready preset
+        falls back to the original. The redirect target is
+        `Cache-Control: private, no-store` because it embeds a short-lived
+        signed URL, not the asset itself.
+      parameters:
+        - $ref: '#/components/parameters/tenant'
+        - name: id
+          in: path
+          required: true
+          description: Media asset id (UUID).
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/preset'
+      responses:
+        "302":
+          description: Redirect to a short-lived signed URL for the requested rendition.
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+            Cache-Control:
+              schema: { type: string, example: "private, no-store" }
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "429":
+          $ref: '#/components/responses/RateLimited'
+        "502":
+          $ref: '#/components/responses/UpstreamError'
+
+components:
+  parameters:
+    tenant:
+      name: tenant
+      in: path
+      required: true
+      description: Tenant slug.
+      schema: { type: string, pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}$' }
+    type:
+      name: type
+      in: path
+      required: true
+      description: Content type name.
+      schema: { type: string, pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}$' }
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: Page size. A value that fails to parse as an integer is silently ignored by the edge and passed through as zero, letting the Domain API's own default apply.
+      schema: { type: integer, minimum: 1 }
+    locale:
+      name: locale
+      in: query
+      required: false
+      description: Restrict to one locale. Validated as an identifier at the edge (`INVALID_LOCALE`) before it becomes part of the cache key.
+      schema: { type: string, pattern: '^[a-zA-Z][a-zA-Z0-9_-]{0,63}$' }
+    cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque keyset-pagination token from a previous page's `next_cursor`. Not decoded or validated by the edge — its shape belongs to the Domain API and can change with `sort`.
+      schema: { type: string }
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: NOT supported by this audience. Presence of this parameter — any value, including empty — is refused with `OFFSET_UNSUPPORTED`; follow `next_cursor` instead.
+      schema: { type: string }
+    sort:
+      name: sort
+      in: query
+      required: false
+      description: Sort key, owned entirely by the Domain API; not validated at the edge. An unsortable key comes back as the upstream's own 400.
+      schema: { type: string }
+    filter:
+      name: filter
+      in: query
+      required: false
+      explode: true
+      description: Repeatable filter clause, forwarded verbatim and evaluated by the Domain API against the PUBLISHED snapshot only.
+      schema: { type: array, items: { type: string } }
+    fields:
+      name: fields
+      in: query
+      required: false
+      explode: true
+      description: Repeatable field projection on the PARENT entry only — see `docs/handbook/08-api.html`. Does not reach into `populate`d relations.
+      schema: { type: array, items: { type: string } }
+    populate:
+      name: populate
+      in: query
+      required: false
+      explode: true
+      description: >-
+        Repeatable relation-expansion path. A dotted path such as
+        `author.avatar` expands up to 3 segments deep, left to right; a
+        segment past depth 3 is refused with `CONTENT_POPULATE_TOO_DEEP` by
+        the Domain API (this edge forwards the value unvalidated). Not
+        honoured together with `preview_token`.
+      schema: { type: array, items: { type: string } }
+    q:
+      name: q
+      in: query
+      required: false
+      description: Free-text search over the published snapshot, forwarded verbatim.
+      schema: { type: string }
+    preset:
+      name: preset
+      in: query
+      required: false
+      description: A named media rendition. Empty (or omitted) means the original asset.
+      schema: { type: string, enum: [thumb, small, medium, large] }
+    previewToken:
+      name: preview_token
+      in: query
+      required: false
+      description: >-
+        Scopes this single request to one unpublished entry's working copy.
+        Rate-limited per token, not per tenant. Refused on every other route
+        with `PREVIEW_NOT_SUPPORTED`.
+      schema: { type: string }
+    ifNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: Strong or weak validator(s) from a previous response's `ETag`, or `*`. A match yields `304` with no body.
+      schema: { type: string }
+
+  headers:
+    ETag:
+      description: Strong validator over the exact response bytes (sha256 hex, quoted). Absent from preview responses.
+      schema: { type: string }
+    CacheControl:
+      description: >-
+        `public, max-age=N` when the operator has configured a positive TTL,
+        else `public, no-cache` (cacheable but always revalidated). Preview
+        responses instead carry `private, no-store` and no `ETag`.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: The request cannot be served as written.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: No such entry.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    RateLimited:
+      description: Too many requests for this tenant, or for this preview token.
+      headers:
+        Retry-After:
+          schema: { type: integer, example: 60 }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    UpstreamError:
+      description: >-
+        The Domain API could not serve this request for a reason the public
+        surface deliberately does not name (including an edge
+        misconfiguration reaching it as 401/403).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    ErrorCode:
+      type: string
+      description: Every error code this edge can emit on its own, plus the three shapes an upstream failure is mapped onto.
+      enum:
+        - INVALID_LOCALE
+        - OFFSET_UNSUPPORTED
+        - PREVIEW_NOT_SUPPORTED
+        - RATE_LIMITED
+        - INVALID_PATH
+        - INVALID_REQUEST
+        - NOT_FOUND
+        - UPSTREAM_ERROR
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { $ref: '#/components/schemas/ErrorCode' }
+            message: { type: string }
+
+    RelatedEntry:
+      description: >-
+        One populated relation. A `to-one` relation renders as this object
+        directly (or `null` when unset); a `to-many` relation renders as an
+        array of this object (`[]` when empty). A target left unrendered by
+        the depth cap, a cycle guard, or a permission refusal is simply
+        absent from `related` rather than present with an error inside it —
+        see ADR-006 Amendment 8.
+      allOf:
+        - $ref: '#/components/schemas/Entry'
+
+    Entry:
+      type: object
+      description: >-
+        The delivery projection of one entry — the PUBLISHED snapshot only.
+        This is deliberately a narrower shape than the admin API's: working-copy
+        and provenance fields (`published_data`, `has_unpublished_changes`,
+        `has_hidden_changes`, `schedule`, `updated_at`, `created_by`,
+        `updated_by`, `published_by`, and their `*_kind`/`*_agent` companions)
+        do not exist for this audience and are never present on the wire —
+        see `EntryDTO.MarshalJSON`'s `audienceDelivery` case, which is the
+        single gate this document is asserting matches.
+      required: [id, type, data, version, status, locale, translation_group_id, created_at]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, description: Content type name. }
+        data:
+          type: object
+          additionalProperties: true
+          description: >-
+            The entry's own fields, as declared by its content type's schema.
+            Narrowed by `?fields=` and by field-level read permission — both
+            only ever remove keys, never add or rename one.
+        version: { type: integer }
+        status: { type: string, enum: [draft, published] }
+        locale: { type: string }
+        translation_group_id: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        published_at: { type: string, format: date-time, description: Present exactly when this snapshot has been published. }
+        related:
+          type: object
+          description: Present only when `?populate=` asked for at least one relation. Keyed by the relation field name at each level of the path.
+          additionalProperties:
+            $ref: '#/components/schemas/RelatedEntry'
+
+    EntryList:
+      type: object
+      description: One cursor-paged page of entries. Carries `next_cursor`/`has_more`, never `total`/`offset` — those are the admin audience's offset-paging fields and do not exist here.
+      required: [items, limit]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Entry' }
+        limit: { type: integer }
+        next_cursor: { type: string, description: Opaque. Absent on the last page. }
+        has_more: { type: boolean }

@@ -1,0 +1,47 @@
+-- Multi-valued fields: one field key holding a JSON array of values, so
+-- many-to-many tagging is expressible without a join table.
+--
+-- A FLAG on the existing types, not three new types. `multiple` on string, enum
+-- and relation buys free-form tags, a controlled vocabulary, and
+-- tags-as-entities respectively. Three new field types would buy the same thing
+-- while touching the type enum in the vendored admin-app.schema.json — which
+-- exists in four hand-synced copies, has already drifted from its generator, and
+-- is pinned by TestFieldTypeParity. An added sibling property is invisible to
+-- that test and validates against every copy today (EntityField has no
+-- additionalProperties: false).
+--
+-- NO storage or index change is needed, which is the reason this migration is
+-- one line. Values already live in entries.payload (JSONB), which holds an array
+-- as happily as a scalar, and idx_entries_payload_gin (payload jsonb_path_ops)
+-- from 000010 is exactly the index nested-array containment wants:
+--   payload @> '{"tags":["ai"]}'
+--
+-- Measured, not assumed: every list query is already scoped by tenant and
+-- content type, so on a SMALL collection the planner uses the composite btree
+-- (idx_entries_tenant_type_locale_status_created) and applies containment as a
+-- filter — the right plan for a handful of rows. The GIN index takes over once
+-- containment is the selective predicate; at 2 000 rows in one type it is
+-- chosen, which is what the integration test pins. Both plans are correct; the
+-- point of the index is the second one.
+-- Note jsonb_path_ops supports ONLY @>. The "natural" any-of spelling
+--   payload -> 'tags' ?| array['a','b']
+-- would SEQ SCAN, because ? / ?| / ?& need the default jsonb_ops. Any future
+-- any-of operator must therefore be OR'd @> clauses, not ?|, or it silently
+-- demands a second GIN index.
+--
+-- DEFAULT FALSE so every existing field keeps its single-valued meaning with no
+-- backfill. NOT NULL because "unknown cardinality" is not a state any reader
+-- could act on.
+--
+-- Immutability is enforced in Go rather than by a constraint, because the thing
+-- being prevented is a TRANSITION and a CHECK cannot see the old row. Flipping
+-- the flag invalidates every stored value in one direction — a scalar "ai" is
+-- not a legal value for a multi field — and since validatePayload checks the
+-- whole document, that does not merely block writes to this field: it makes
+-- every entry of the type un-PATCHable, with an error naming a field the caller
+-- never touched. Migrating instead would require rewriting payload AND
+-- published_payload, and rewriting a snapshot nobody published is precisely what
+-- ADR-006 exists to prevent.
+
+ALTER TABLE content_type_fields
+    ADD COLUMN IF NOT EXISTS multiple BOOLEAN NOT NULL DEFAULT FALSE;

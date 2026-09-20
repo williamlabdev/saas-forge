@@ -1,0 +1,97 @@
+# Production reverse proxy (deploy/docker-compose.prod.yml's `caddy` service).
+# Env-driven so the same file serves both a real deployment (automatic HTTPS
+# via ACME) and the local restore drill (self-signed, CADDY_TLS_MODE=internal)
+# — see docs/DEPLOYMENT.md. Required vars: API_DOMAIN, DELIVERY_DOMAIN,
+# CONSOLE_DOMAIN, ACME_EMAIL, GATEWAY_SECRET. MEDIA_DOMAIN is optional (only
+# used with the `minio` compose profile) — see the commented-out site block.
+
+{
+	# Ignored when a site's `tls` line resolves to `tls internal` (see below) —
+	# ACME is only consulted for real, publicly resolvable domains.
+	email {$ACME_EMAIL}
+}
+
+# Reused by every site block below.
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+# GraphQL BFF. bff does not proxy arbitrary paths (only /health, /playground,
+# /graphql — confirmed against apps/bff's router), so /ready is routed
+# straight to `app` here instead of through bff.
+{$API_DOMAIN} {
+	tls {$CADDY_TLS_MODE}
+	import common
+
+	# Readiness probe for an orchestrator/uptime check. Bypasses bff and the
+	# gateway secret entirely: /ready is exempt from the app's own
+	# GatewayGuard (internal/platform/router.go), the same way /health is.
+	handle /ready {
+		reverse_proxy app:8080 {
+			header_up X-Forwarded-For {http.request.remote.host}
+		}
+	}
+
+	handle {
+		reverse_proxy bff:4000 {
+			header_up X-Forwarded-For {http.request.remote.host}
+		}
+	}
+}
+
+# Delivery API (public content read surface).
+{$DELIVERY_DOMAIN} {
+	tls {$CADDY_TLS_MODE}
+	import common
+	reverse_proxy delivery:4100 {
+		header_up X-Forwarded-For {http.request.remote.host}
+	}
+}
+
+# Console SPA, static files served straight out of the container, plus its
+# same-origin content-API proxy (console's VITE_CONTENT_API=/content-api).
+{$CONSOLE_DOMAIN} {
+	tls {$CADDY_TLS_MODE}
+	import common
+
+	# Strip the /content-api prefix and forward to `app` directly — this is
+	# the one route besides /ready where Caddy talks to `app` without going
+	# through bff/delivery, which each mint their own X-Gateway-Secret instead
+	# of forwarding a client-supplied one. A browser can set this header on
+	# its own request, but `header_up Field value` (no +/- prefix) REPLACES
+	# any existing value rather than merging — a separate `-X-Gateway-Secret`
+	# delete is not just unneeded here, it actively breaks this: Caddy applies
+	# Set before Delete, so a delete line placed after would erase the value
+	# this line just set (confirmed against a running stack, not from docs).
+	handle_path /content-api/* {
+		reverse_proxy app:8080 {
+			header_up X-Gateway-Secret {$GATEWAY_SECRET}
+			header_up X-Forwarded-For {http.request.remote.host}
+		}
+	}
+
+	handle {
+		root * /srv/console
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# Self-hosted media (only relevant with the `minio` compose profile — most
+# deployments point MEDIA_S3_* at real object storage instead and never use
+# this block). Uncomment and set MEDIA_DOMAIN in .env.production to enable.
+#
+# {$MEDIA_DOMAIN} {
+# 	tls {$CADDY_TLS_MODE}
+# 	import common
+# 	reverse_proxy minio:9000 {
+# 		header_up X-Forwarded-For {http.request.remote.host}
+# 	}
+# }

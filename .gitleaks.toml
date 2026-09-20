@@ -1,0 +1,29 @@
+# gitleaks configuration for SaaSForge.
+#
+# Uses the default ruleset, but allowlists the throwaway/placeholder secrets that
+# intentionally live in committed example env files and test fixtures. Real
+# secrets belong only in an untracked .env (gitignored) and must never be
+# committed.
+#
+# Provenance: the first two entries come from the retired `SaasForge` repo
+# (0630–0714), salvaged 2026-09-01 before that repo was cleared for reuse as the
+# public repo. The fixture entry is new — the 0901 extraction rehearsal produced
+# 12 findings, and these two rules are what reduce them to zero without hiding
+# anything real.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Placeholder/throwaway secrets in committed example env files"
+paths = [
+  '''\.env\.example$''',
+  '''\.env\.production\.example$''',
+]
+
+[[allowlists]]
+description = "Test fixtures: the repeating 0123…/fedc… hex constants used as keys, peppers and webhook secrets"
+regexes = [
+  '''0123456789abcdef''',
+  '''fedcba9876543210''',
+]

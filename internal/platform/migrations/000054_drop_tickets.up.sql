@@ -1,0 +1,15 @@
+-- Drop the tickets table (工單 vertical slice removal, 2026-09-14).
+--
+-- WHY A DROP MIGRATION AND NOT A DELETION OF 000009. 000009 already applied
+-- to every database that ever ran this codebase (compose initdb, existing
+-- dev volumes, e2e containers). Deleting the file would make the ledger
+-- disagree with the files on disk for those databases — see ADR-012 and
+-- internal/platform/migrate/discover.go: ordering and checksums are by
+-- number, and a missing number is a loud early failure, not a quiet skip.
+-- The table is removed here, forward-only, like every other schema change.
+--
+-- NOTHING REFERENCES tickets. owner_id carried a FK to users(id) ON DELETE
+-- CASCADE, so dropping the table drops the constraint with it; no other
+-- table holds a FK into tickets (verified at removal time: only
+-- internal/ticket/* referenced it, deleted in the same change).
+DROP TABLE IF EXISTS tickets;

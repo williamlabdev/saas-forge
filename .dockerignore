@@ -1,0 +1,7 @@
+.git
+.gitignore
+.cursor
+.env
+*.md
+**/*_test.go
+**/testdata

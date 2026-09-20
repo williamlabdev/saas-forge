@@ -1,0 +1,24 @@
+# Example crontab entries for deploy/healthwatch.sh and deploy/backup.sh.
+# Copy the lines you want into `crontab -e` (or a systemd timer / your
+# platform's scheduled-job equivalent) and fill in the real values —
+# crontab has no access to .env.production, so the env vars are set inline.
+#
+# Absolute paths throughout: cron's PATH is minimal and its cwd is undefined.
+
+# Health/alert check every 5 minutes.
+*/5 * * * * API_DOMAIN=api.example.com DELIVERY_DOMAIN=cdn.example.com CONSOLE_DOMAIN=console.example.com ALERT_WEBHOOK_URL=https://hooks.example.com/services/XXX /opt/saas-forge/deploy/healthwatch.sh >>/var/log/saas-platform/healthwatch.log 2>&1
+
+# Nightly backup at 03:15, keeping 14 days. backup.sh/restore.sh/restore-
+# drill.sh all default ENV_FILE to .env.production next to the script (an
+# absolute path via SCRIPT_DIR, so cron's undefined cwd doesn't matter) — if
+# IMAGE_TAG is pinned there, as recommended, these scripts pick it up with no
+# extra env needed here; otherwise they fall back to the checkout's current
+# git sha and, failing that, a fixed placeholder (fine for a postgres-only
+# exec, which never pulls or starts app/bff/etc.).
+15 3 * * * BACKUP_KEEP_DAYS=14 /opt/saas-forge/deploy/backup.sh >>/var/log/saas-platform/backup.log 2>&1
+
+# Weekly restore drill (Sunday 04:00) against the newest nightly backup —
+# proves backups are restorable on a schedule, not just that backup.sh ran.
+# A FAIL here should page the same as a healthwatch alert; wire your cron
+# wrapper / MAILTO / systemd OnFailure= accordingly.
+0 4 * * 0 /opt/saas-forge/deploy/restore-drill.sh >>/var/log/saas-platform/restore-drill.log 2>&1

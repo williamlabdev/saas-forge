@@ -1,0 +1,32 @@
+<section class="chapter" id="ch5">
+<h2>5. 日常內容操作</h2>
+
+<h3>5.1 新增一筆內容</h3>
+<ol class="steps">
+<li>選定一個 content type(<code>GET /api/v1/content/types</code>)。</li>
+<li>建立 entry(<code>POST /api/v1/content/entries</code>),填欄位。存下來時狀態是 <code>draft</code>——此時前台看不到它。</li>
+<li>確認無誤後<strong>發佈</strong>(<code>POST /api/v1/content/entries/{id}/publish</code>)。狀態轉成 <code>published</code>,delivery edge 立刻讀得到。</li>
+</ol>
+<p>要下架:對已發佈的 entry 執行 <code>unpublish</code>,它回到 <code>draft</code>,內容保留。<strong>下架不需要發佈權限</strong>——止血比放行寬鬆是刻意的設計。</p>
+
+<h3>5.2 多語言</h3>
+<p>同一則內容的各語言版本屬於同一個翻譯群組。在 entry 上可以列出它所有的 locale 版本,彼此獨立編輯與發佈。</p>
+
+<h3>5.3 檔案與圖片</h3>
+<p><code>file</code> 型別的欄位走物件儲存。上傳分兩步:先向系統要一個上傳位置,傳完再回報完成。取用時系統給的是<strong>簽署過的短期 URL</strong>,不是永久公開連結。</p>
+
+<h3>5.4 預覽</h3>
+<p>還沒發佈的內容可以產生一條<strong>預覽連結</strong>,拿給沒有帳號的人看。這是唯一能讓草稿被外部看見的方式,發佈仍然是分開的動作。</p>
+
+<h3>5.5 誰改了什麼</h3>
+<table>
+<tr><th style="width:26%">在哪看</th><th>看得到什麼</th></tr>
+<tr><td>活動紀錄<br><code>GET /content/activity</code></td><td>整個 app 的寫入事件流:誰、什麼時候、動了哪一筆。</td></tr>
+<tr><td>單筆 entry 的署名紀錄<br><code>GET /content/entries/{id}/attribution</code></td><td>細到<em>欄位層級</em>:這個欄位最後是誰改的,是人改的還是 agent 改的。</td></tr>
+</table>
+<div class="tip"><strong>agent 改過的欄位一定查得出來</strong>每次寫入都記錄行為者類別(<code>human</code> / <code>agent</code> / <code>service</code>),所以「這段文案是 AI 寫的還是人寫的」是可以逐欄位回答的問題,不需要靠猜。</div>
+<p>viewer 看不到活動紀錄與發佈佇列(<code>content:activity:read</code> 與 <code>content:review:list</code>)——這兩個是有寫入權的人才看得到的視角。</p>
+
+<h3>5.6 Webhook</h3>
+<p>內容變動要通知外部系統時,在租戶下註冊 webhook。註冊與刪除 webhook 屬於 owner / admin 權限。</p>
+</section>

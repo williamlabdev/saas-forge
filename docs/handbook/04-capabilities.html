@@ -1,0 +1,36 @@
+<section class="chapter" id="ch4">
+<h2>4. 能力地圖</h2>
+<p class="lead">系統的能力分成兩層:<strong>平台層</strong>決定有哪些 app 存在,<strong>應用層</strong>管理某一個 app 裡的內容。日常操作幾乎都在應用層。這一章把兩層的能力列成清單,每一項都對應一組你叫得到的端點——不論你是自己接前端、寫腳本,還是讓 agent 去做。</p>
+
+<div class="note"><strong>操作介面是你自己的選擇</strong>本專案是後端。開發時使用的 admin console 是一個獨立的 React + Vite 專案,<strong>沒有開源,目前也沒有開源計畫</strong>,而且它跟後端之間<strong>沒有任何私有協定</strong>——它走的就是這裡列出的公開介面。下面的表格因此有第三欄:那是 console 把該項能力放在哪個路徑,留著是因為它是這組能力的好名字,不是因為你需要那個 console。完整的端點簽章在第 8 章。</div>
+
+<h3>4.1 應用層:一個 app 裡的內容</h3>
+<table>
+<tr><th style="width:20%">能力</th><th style="width:34%">端點</th><th style="width:26%">做什麼</th><th>console 路徑</th></tr>
+<tr><td><strong>待辦</strong></td><td><code>GET /content/pending-review</code><br><code>GET /content/schema/proposals</code></td><td><em>等你回應</em>的事:待發佈的內容、等你回答的 schema 提案。</td><td><code>/activity</code></td></tr>
+<tr><td><strong>活動紀錄</strong></td><td><code>GET /content/activity</code></td><td>整個 app 的寫入事件流:誰、什麼時候、動了哪一筆。</td><td><code>/activity</code></td></tr>
+<tr><td><strong>內容</strong></td><td><code>/content/entries</code>(CRUD)<br><code>…/{id}/publish</code>、<code>…/unpublish</code></td><td>內容本體。新增、編輯、發佈、下架。第 5 章。</td><td><code>/data</code></td></tr>
+<tr><td><strong>結構</strong></td><td><code>/content/types</code>、<code>…/fields</code><br><code>POST /content/schema/plan</code><br><code>POST /content/schema/apply</code></td><td>改結構。先 <code>plan</code> 看影響,再 <code>apply</code>。第 6 章。</td><td><code>/schema</code></td></tr>
+<tr><td><strong>提案</strong></td><td><code>/content/schema/proposals</code><br><code>…/mine</code>、<code>…/{id}/approve</code></td><td>破壞性變更的審核軌跡。審核者與提案人查的是不同路徑。第 6 章。</td><td><code>/schema/proposals</code></td></tr>
+<tr><td><strong>用量</strong></td><td><code>GET /content/usage</code></td><td>租戶的方案、配額上限與目前用量。</td><td><code>/reports</code></td></tr>
+<tr><td><strong>通知</strong></td><td><code>/api/v1/notifications</code></td><td>站內通知與未讀數。</td><td><code>/notifications</code></td></tr>
+<tr><td><strong>協作者</strong></td><td><code>POST /tenants/invites</code><br><code>POST /tenants/invites/accept</code></td><td>邀請成員。角色上限見 3.2。</td><td><code>/permissions</code></td></tr>
+<tr><td><strong>Agent 憑證</strong></td><td><code>/auth/agent-tokens</code>(發放 / 列出 / 撤銷)</td><td>讓 agent 用自己的可撤銷憑證進來。第 7 章。</td><td><code>/agents</code></td></tr>
+</table>
+<p><small>路徑省略了共同的 <code>/api/v1</code> 前綴。</small></p>
+
+<h3>4.2 平台層:哪些 app 存在</h3>
+<table>
+<tr><th style="width:22%">能力</th><th style="width:44%">端點</th><th>用途</th></tr>
+<tr><td>App 目錄</td><td><code>GET/POST /api/v1/platform/apps</code><br><code>PATCH /api/v1/platform/apps/{id}/status</code></td><td>列出與建立 app;暫停 / 封存 / 啟用</td></tr>
+<tr><td>方案與帳務</td><td><code>PUT /api/v1/platform/tenants/{slug}/plan</code><br><code>GET /api/v1/platform/billing/summary</code><br><code>GET /api/v1/platform/billing/invoices</code></td><td>租戶方案、額度、發票</td></tr>
+<tr><td>跨租戶指標</td><td><code>GET /api/v1/platform/reports/summary</code></td><td>平台層的統計</td></tr>
+<tr><td>系統告警</td><td><code>GET /api/v1/platform/alerts</code></td><td>平台告警</td></tr>
+<tr><td>平台人員</td><td><code>GET/POST /api/v1/platform/staff</code></td><td>平台人員與角色</td></tr>
+<tr><td>工單</td><td><code>/api/v1/tickets</code></td><td>支援工單</td></tr>
+</table>
+
+<div class="warn"><strong>平台管理員不是租戶管理員</strong>平台層的 admin 身分<em>不會</em>自動讓你能動任何租戶的內容。要碰租戶資料,必須是那個租戶的成員。這是刻意的隔離,不是漏設。</div>
+
+<div class="note"><strong>權限差別發生在動作上,不在能力清單上</strong>能不能列出 content types,和能不能刪掉其中一個欄位,是兩個分開授權的動作(見 3.3)。所以「看得到入口、按下去才知道自己缺什麼」是預期行為,不是設計失誤——把整個能力藏起來,只會讓人不知道要去要什麼權限。開發用的 console 也照這個原則做:九個導覽項目對所有角色都看得到。</div>
+</section>

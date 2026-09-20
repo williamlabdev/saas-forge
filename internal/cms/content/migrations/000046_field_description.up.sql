@@ -1,0 +1,21 @@
+-- 000046: a field's own description — the sentence the schema's author writes
+-- for the person filling the box in.
+--
+-- It has existed in the contract's EntityField since the beginning and has
+-- been thrown away at the door ever since: FromIR recorded it as Dropped with
+-- the reason "inert documentation, nothing depends on it". That was true right
+-- up until ADR-007 Amendment 1 shipped, because the admin app renders exactly
+-- one helper line under a control, and the value rules are now composed INTO
+-- it. A field with a description and a constraint has one line to say both, so
+-- dropping the description silently drops half of what that line was for.
+--
+-- A plain TEXT column with a '' default, and no CHECK: it is documentation.
+-- Unlike format and the range order there is no rule for the database to
+-- restate — every string is a legal description — and unlike `pattern` it is
+-- never compiled or applied to a value. It is trimmed at the service and
+-- otherwise stored as written.
+--
+-- One column covers a content type's fields AND a component's sub-fields:
+-- 000044 put both in this table, distinguished by which owner id is set.
+ALTER TABLE content_type_fields
+    ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';

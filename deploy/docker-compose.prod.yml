@@ -1,0 +1,221 @@
+# Production stack (deploy/). Standalone file — NOT an override of the dev
+# docker-compose.yml at the repo root. Run with `-f deploy/docker-compose.prod.yml`
+# (the Makefile's prod-* targets already do this). See docs/DEPLOYMENT.md.
+#
+# Topology matches docs/DEPLOYMENT_HARDENING.md §4: only `caddy` publishes
+# host ports. Every other service is reachable only on the compose network,
+# and Caddy is the only place that injects X-Gateway-Secret on the two routes
+# that need it (see ./Caddyfile) — app/bff/delivery hold no host ports here,
+# unlike the dev compose file at the repo root.
+
+x-common: &common
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    # Bounded log growth. Without this the default json-file driver keeps
+    # every line forever and a noisy container fills the host disk over time.
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  # The only internet-facing service. Terminates TLS — automatic HTTPS via
+  # ACME by default, or `tls internal` for the local restore drill, see
+  # Caddyfile / Caddyfile.local — and fans out by domain. Image pinned to an
+  # exact 2.x patch release, never `:2` or `:latest`: a silent minor bump here
+  # changes ACME/TLS behaviour under you.
+  caddy:
+    image: caddy:2.8.4
+    <<: *common
+    ports:
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+      - "${CADDY_HTTPS_PORT:-443}:443/udp" # HTTP/3
+    env_file:
+      - ../.env.production
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - ./${CADDYFILE:-Caddyfile}:/etc/caddy/Caddyfile:ro
+      # Console's built static assets (SPA). deploy/console-dist/ is
+      # gitignored; build the console repo and point CONSOLE_DIST at its
+      # dist/ output, or leave the default and drop an index.html there.
+      - ${CONSOLE_DIST:-./console-dist}:/srv/console:ro
+    depends_on:
+      app:
+        condition: service_healthy
+      bff:
+        condition: service_healthy
+      delivery:
+        condition: service_healthy
+    # No healthcheck here: Caddy answers only Host headers that match a
+    # configured site (no catch-all vhost), so a healthcheck would have to
+    # fake one of API_DOMAIN/DELIVERY_DOMAIN/CONSOLE_DOMAIN — `docker compose
+    # ps` reporting "healthy" would say less than the upstream healthchecks
+    # already say. deploy/healthwatch.sh is the real signal: it probes the
+    # public URLs Caddy actually serves.
+
+  # Bundled Postgres. Optional in spirit — production is expected to prefer a
+  # managed instance (see .env.production.example's DATABASE_URL comment) —
+  # but present by default so a from-scratch deploy works without one. No
+  # host port (unlike dev's 5433): only app/migrate on the compose network
+  # reach it. If you point DATABASE_URL at managed Postgres instead, remove
+  # this service and migrate's dependency on it rather than leave it running
+  # unused.
+  postgres:
+    image: postgres:16-alpine
+    <<: *common
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production — generate with: openssl rand -hex 32}"
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: Dockerfile.migrate
+    image: ${IMAGE_PREFIX:-saas-platform}/migrate:${IMAGE_TAG:?IMAGE_TAG is required (git sha)}
+    env_file:
+      - ../.env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no" # one-shot — mirrors the dev compose file's migrate service
+
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ${IMAGE_PREFIX:-saas-platform}/app:${IMAGE_TAG:?IMAGE_TAG is required (git sha)}
+    <<: *common
+    env_file:
+      - ../.env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    # No host port: reached only via bff/delivery, and via Caddy's own
+    # /ready and /content-api/* routes (see Caddyfile) — never directly.
+
+  bff:
+    build:
+      context: ..
+      dockerfile: Dockerfile.bff
+    image: ${IMAGE_PREFIX:-saas-platform}/bff:${IMAGE_TAG:?IMAGE_TAG is required (git sha)}
+    <<: *common
+    env_file:
+      - ../.env.production
+    environment:
+      # Compose-network address. DOMAIN_API_URL in .env.production is the
+      # host-facing form (https://API_DOMAIN/...) and would not resolve here.
+      DOMAIN_API_URL: http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  delivery:
+    build:
+      context: ..
+      dockerfile: Dockerfile.delivery
+    image: ${IMAGE_PREFIX:-saas-platform}/delivery:${IMAGE_TAG:?IMAGE_TAG is required (git sha)}
+    <<: *common
+    env_file:
+      - ../.env.production
+    environment:
+      DOMAIN_API_URL: http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Agent-facing MCP transport (ADR-013 step 6), HTTP mode. Off by default —
+  # most deployments have no agent traffic yet.
+  # `docker compose --profile agents up` (or COMPOSE_PROFILES=agents) to include.
+  cms-mcp:
+    profiles: ["agents"]
+    build:
+      context: ..
+      dockerfile: Dockerfile.cms-mcp
+    image: ${IMAGE_PREFIX:-saas-platform}/cms-mcp:${IMAGE_TAG:?IMAGE_TAG is required (git sha)}
+    <<: *common
+    env_file:
+      - ../.env.production
+    environment:
+      DOMAIN_API_URL: http://app:8080
+      CMS_MCP_HTTP_ADDR: ":4200"
+    depends_on:
+      app:
+        condition: service_healthy
+    # No healthcheck: the HTTP-mode server has no /health route (every
+    # request needs a caller bearer), and the dev compose file's mcp-mock
+    # service does not health-check it either.
+
+  # Self-hosted S3-compatible media storage. Off by default — production is
+  # expected to point MEDIA_S3_* at real object storage (AWS S3 / R2 / B2),
+  # in which case leave this profile disabled and set up deploy/s3-cors.json
+  # on the real bucket instead. `docker compose --profile minio up` to include.
+  minio:
+    profiles: ["minio"]
+    image: minio/minio:RELEASE.2024-09-13T20-26-02Z
+    <<: *common
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MEDIA_S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: "${MEDIA_S3_SECRET_KEY:?set MEDIA_S3_SECRET_KEY in .env.production}"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  minio-init:
+    profiles: ["minio"]
+    image: minio/mc:RELEASE.2024-09-16T17-43-14Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MEDIA_S3_ACCESS_KEY:-minioadmin} ${MEDIA_S3_SECRET_KEY} &&
+      mc mb --ignore-existing local/${MEDIA_S3_BUCKET:-media} &&
+      echo 'bucket ready'
+      "
+    # Self-hosted MinIO still needs a CORS rule for the console's
+    # browser-direct upload (ADR-005), unlike dev where MinIO's own default is
+    # permissive — do not rely on that default for a bucket reachable via
+    # MEDIA_DOMAIN. See deploy/s3-cors.json and docs/DEPLOYMENT.md.
+
+volumes:
+  pgdata:
+  miniodata:
+  caddy_data:
+  caddy_config:

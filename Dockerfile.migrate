@@ -1,0 +1,34 @@
+# syntax=docker/dockerfile:1
+#
+# The migration applier, as its own image and its own compose service.
+#
+# It is separate from the server image on purpose (ADR-012 §4): the server
+# checks and refuses, this applies. Shipping them as one binary would put "run
+# the DDL" one env var away from happening on every boot, which is exactly the
+# race between replicas — and the unowned decision — that the split removes.
+
+FROM golang:1.26-alpine AS builder
+
+RUN apk add --no-cache ca-certificates git
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+# The migrations are compiled in via go:embed (internal/migrations_embed.go),
+# so this image carries the SQL it applies — there is no mount to keep in sync.
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/migrate ./cmd/migrate
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates
+
+COPY --from=builder /out/migrate /usr/local/bin/migrate
+
+# No default command beyond `up`: compose runs this to completion before the
+# app starts, and `adopt` is deliberately something a person types.
+ENTRYPOINT ["/usr/local/bin/migrate"]
+CMD ["up"]

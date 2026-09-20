@@ -1,0 +1,184 @@
+<section class="chapter" id="ch8">
+<h2>8. API 參考</h2>
+<p class="lead">所有內部 API 都掛在 <code>/api/v1</code> 之下,以 <code>Authorization: Bearer &lt;token&gt;</code> 認證。若部署有設定 gateway secret,除了 <code>/health</code> 之外每個請求都要帶 <code>X-Gateway-Secret</code>。</p>
+
+<h3>8.1 登入與憑證</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:40%">路徑</th><th>用途</th></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/login</code></td><td>登入取得 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/refresh</code></td><td>換新 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/switch-tenant</code></td><td>切換到另一個租戶的 token</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/logout</code></td><td>登出</td></tr>
+<tr><td>POST</td><td><code>/api/v1/auth/agent-tokens</code></td><td>簽發 agent 憑證(owner / admin)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/auth/agent-tokens</code></td><td>列出已發放的憑證</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/auth/agent-tokens/{id}</code></td><td>撤銷憑證</td></tr>
+</table>
+
+<h3>8.2 內容</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:44%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries</code></td><td><code>content:create</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries</code></td><td><code>content:list</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:read</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:update</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/entries/{id}</code></td><td><code>content:delete</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/publish</code></td><td><code>content:publish</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/unpublish</code></td><td><code>content:update</code>(下架是止血)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/schedule</code></td><td>排 publish 要 <code>content:publish</code>,排 unpublish 要 <code>content:update</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/entries/{id}/schedule</code></td><td><code>content:update</code>;取消的若是 publish 排程,另要 <code>content:publish</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/schedule</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/revisions</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/revisions/{no}</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/revisions/{no}/diff</code></td><td><code>content:read</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/restore</code></td><td><code>content:update</code>(復原不發布)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/translations</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/attribution</code></td><td><code>content:activity:read</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/entries/{id}/preview-link</code></td><td><code>content:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/entries/{id}/referenced-by?type=&amp;limit=&amp;offset=</code></td><td><code>content:read</code>(反向查誰引用這筆 entry 的關聯欄位;預設 50、上限 200;agent 憑證依目標型別授權,回應列另依 whitelist 過濾,ADR-024)</td></tr>
+</table>
+<p><strong>自由文字搜尋</strong>(<code>q</code>,ADR-021)。<code>GET /entries</code> 可帶 <code>?q=</code>,以空白切成多個詞、<strong>全部 AND</strong> 比對該內容型別每一筆的抽出純文字(<code>string</code>/<code>text</code>/<code>richtext</code> 欄位,component / dynamic zone 子欄位遞迴一層;richtext 比對的是使用者看到的文字,不是區塊 JSON),可以跟 <code>filter</code> 同時用。上限 200 字元,超過回 422 <code>CONTENT_SEARCH_QUERY_TOO_LONG</code>。管理端比對的是工作副本,交付面(見 8.6)比對已發布快照。</p>
+<p><strong>展開關聯</strong>(<code>populate</code>,ADR-006 Amendment 6、7 與 8)。列表與單筆都能帶 <code>?populate=author&amp;populate=tags</code>(可重複,值內也可用逗號),展開關聯欄位。<strong>值可以用 <code>.</code> 接到最深 3 段</strong>(<code>author</code>、<code>author.avatar</code>、<code>author.avatar.owner</code>),第二段起是被展開實體自己的關聯欄位——超過 3 段回 400 <code>CONTENT_POPULATE_TOO_DEEP</code>。結果放在與 <code>data</code> <strong>同層的 <code>related</code></strong>,而巢狀的每一層也是同一個形狀:<code>author.avatar</code> 的頭像掛在 <code>related.author.related.avatar</code>,不是攤平的路徑鍵——只認得單層 <code>related</code> 的舊客戶端,沿它已經懂的鍵往下走一層就讀得到。<code>data</code> 裡的關聯欄位仍然是 id——同一個欄位的 JSON 型別不會因為帶不帶參數而變,沒帶 <code>populate</code> 的回應逐位元組不變。基數跟著 schema:單值給物件或 <code>null</code>,多值給陣列(空的給 <code>[]</code>),順序與 <code>data</code> 裡的 id 一致。一個指回自己路徑上某筆實體的關聯(例如 <code>author.mentor.mentor</code> 且 <code>mentor</code> 又指回同一筆 <code>author</code>)會<strong>照常渲染那筆實體</strong>,但不會再展開進它自己的 <code>related</code>——深度預算沒花完也一樣,擋的是環,不是長度。</p>
+<p>管理面展開的是<strong>工作副本</strong>,不是已發布快照:被展開的實體就是你直接 <code>GET</code> 那一筆會拿到的東西——admin 形狀(<code>data</code> 是工作副本、旁邊帶 <code>published_data</code> 與 <code>has_unpublished_changes</code>)、套目標型別自己的欄位權限,巢狀每一層都一樣。<strong>從沒發布過的目標照樣展開</strong>(<code>status</code> 就是 <code>draft</code>),因為管理面看的本來就是「即將發布的那一份」;<strong>已刪除</strong>或別租戶的 id 則是單值 <code>null</code>、多值略過——鍵一定在,「問了但沒有」與「沒問」是不同的答案。目標型別的 <code>read_roles</code> 照樣要過(403),<strong>而且每一段各自要過</strong>——母體型別可讀不代表它關聯到的型別跟著可讀;目標型別若把你的角色限制成「只看自己建的」,同事的那一列在 <code>related</code> 裡就不會出現,這條規矩同樣跟著下到巢狀的每一層。<code>fields</code> 只作用於母體;<strong>整個請求(所有層級加總、去重後)</strong>超過 500 個關聯目標回 400 <code>CONTENT_POPULATE_TOO_MANY</code>——單一層沒超過不保證整體沒超過。錯誤碼與交付面完全相同(見 8.6)。<strong>預覽憑證不能用</strong>:它只指名一筆,回 403 <code>CONTENT_POPULATE_PREVIEW_UNSUPPORTED</code>。</p>
+<p><strong>排程發布 / 排程下架</strong>(ADR-017)。<code>POST .../schedule</code> 的 body 是 <code>{"action": "publish"|"unpublish", "run_at": "&lt;RFC3339&gt;"}</code>,成功回 201。排 publish 時會把工作副本現在的 <code>version</code> 釘住:<strong>之後只要有人改了工作副本,這筆排程就作廢</strong>(狀態變 <code>stale</code>),<strong>不會自動改期、也不會改發新內容</strong>——上線的永遠是某個人看過並核准的那一份。<strong>排 unpublish 不受編輯影響</strong>:下架撤的是已上線的快照,改工作副本沒有改變對外的內容,所以排好的下架照樣到點執行。作廢時會寫一筆 <code>entry.schedule.stale</code> 活動記錄(actor 是那次編輯的人,<code>details</code> 帶 <code>schedule_id</code> / <code>pinned_version</code> / <code>entry_version</code>),但<strong>沒有通知</strong>——要主動看。手動 publish / unpublish 會讓待執行的排程變 <code>superseded</code>,刪除 entry 會一併刪掉排程。<code>DELETE .../schedule</code> 取消(204),<code>GET .../schedule</code> 回最近一筆(任何狀態;沒有就 404)。一個 entry <strong>同時只能有一筆待執行的排程</strong>,要改時間就先取消再排。管理端讀 entry 時,若有<strong>待執行(<code>pending</code>)或已作廢(<code>stale</code>)</strong>的排程會多帶一個 <code>schedule</code> 欄位——<code>stale</code> 也帶,是因為它是「要人重排」的待辦,不該從畫面上默默消失;<code>done</code> / <code>cancelled</code> / <code>superseded</code> / <code>failed</code> 不帶,那些去 <code>GET .../schedule</code> 問。單筆 <code>GET</code> 與<strong>清單</strong>(<code>GET /entries</code>)一致帶這個欄位——清單一次查完整頁的排程,不逐列查。<strong>對外交付面永遠看不到它</strong>。</p>
+<p>實際執行由背景 worker 輪詢,精度等於輪詢間隔(<code>SCHEDULE_POLL_INTERVAL</code>,預設 <code>30s</code>),所以排 08:00 會在 08:00 之後的一個輪詢週期內生效。<strong>執行失敗不重試</strong>,排程標成 <code>failed</code> 並留下原因,活動記錄裡那筆 publish / unpublish 的動作者是<strong>當初排程的人</strong>,另帶「經由排程」的標記。</p>
+<p>排程相關的錯誤碼:</p>
+<table>
+<tr><th style="width:44%">錯誤碼</th><th style="width:8%">狀態</th><th>意思</th></tr>
+<tr><td><code>CONTENT_SCHEDULE_ACTION_INVALID</code></td><td>422</td><td><code>action</code> 不是 publish / unpublish</td></tr>
+<tr><td><code>CONTENT_SCHEDULE_TIME_INVALID</code></td><td>422</td><td><code>run_at</code> 不是 RFC3339、不在未來,或超過一年</td></tr>
+<tr><td><code>CONTENT_SCHEDULE_EXISTS</code></td><td>409</td><td>已經有一筆待執行的排程(<code>details</code> 帶它的 <code>run_at</code>)</td></tr>
+<tr><td><code>CONTENT_SCHEDULE_NOT_FOUND</code></td><td>404</td><td>沒有排程可取消 / 可讀</td></tr>
+<tr><td><code>CONTENT_SCHEDULE_NOOP</code></td><td>422</td><td>這筆排程什麼都不會改(例如對草稿排下架)</td></tr>
+</table>
+
+<p><strong>發布修訂版與復原</strong>(ADR-018)。<strong>每一次上線</strong>——人按的、排程放的都算——會留下一版快照,每個 entry 保留<strong>最新 20 版</strong>,更舊的會被真的刪掉(不是隱藏起來)。<strong>下架不留版</strong>,因為下架沒有新的上線可記。編號 <code>revision_no</code> 是<strong>每個 entry 各自從 1 開始</strong>的序號,不是 entry 的 <code>version</code>——後者每存一次草稿就會動,連續兩次上線很可能是 v4 和 v19。保留窗口滿了之後號碼會從比 1 大的數字開始,但窗口內是連號的。</p>
+<p><code>GET .../revisions</code> 回發布史,<strong>新到舊</strong>,<strong>不帶內容</strong>(<code>revision_no</code> / <code>version</code> / <code>published_at</code> / <code>published_by</code> / <code>via</code> / <code>via_schedule_id</code>)——不帶不只是為了輕,列表是拿來瀏覽的,把每一版的內容塞進來等於繞過欄位層權限。從沒發布過的 entry 回 <code>[]</code> 而不是 404。<code>GET .../revisions/{no}</code> 才帶 <code>data</code>,並且照讀者的欄位權限遮罩。<code>GET .../revisions/{no}/diff</code> 比的是<strong>那一版 vs 現在的工作副本</strong>(不是 vs 已上線的快照),因為它要回答的問題是「按下復原會改掉什麼」;回應帶 <code>revision_data</code> / <code>data</code> / <code>changed_keys</code>,讀不到的欄位會被遮掉但仍以 <code>has_hidden_changes</code> 誠實說「這裡也有東西變了」。</p>
+<p><code>POST .../restore</code> 的 body 是 <code>{"revision_no": N}</code>,可帶 <code>If-Match</code>。它<strong>只寫回工作副本,不發布</strong>:<code>status</code>、已上線的快照、<code>published_at</code> 一格都不動,公開站看到的東西跟按之前完全一樣;要把復原後的草稿放上線,是另一個獨立動作、另一道 <code>content:publish</code> 閘門。復原是<strong>整份取代不是合併</strong>——發布之後才加的欄位會被拿掉,否則結果既不是舊文件也不是新文件。<code>version</code> 會前進,所以釘在舊版本上的待執行 publish 排程會照 ADR-017 的規則變 <code>stale</code>。回應是 <code>{"entry": {...}, "restored_from": {"revision_no", "published_at", "dropped_keys"}}</code>;<code>dropped_keys</code> 列出<strong>那一版有、但現行內容型別已經不再定義</strong>的欄位——這些值無處可放,會被丟掉並具名回報(也會寫進活動記錄),而不是靜靜消失。反過來,發布之後新增的必填欄位、收緊的約束、被別人佔走的唯一值,都<strong>落回既有的驗證</strong>(422 / 409),復原不為它們另設錯誤碼。復原會寫一筆 <code>entry.restore</code> 活動記錄,<code>details</code> 帶 <code>revision_no</code> / 來源的 <code>published_at</code> / <code>dropped_keys</code>。</p>
+<p><strong>欄位層權限照舊生效,但守的是「值真的會變」的欄位</strong>:把一個你寫不動的欄位的<strong>相同值</strong>放回去不算對它的寫入(儲存前後那一格讀起來一樣),所以受限角色不會因為文件裡有受限欄位就永遠復原不了;真的要<strong>搬動</strong>受限欄位的復原——覆蓋它或把它整個拿掉——照樣 403。<strong>對外交付面與預覽面看不到這四支端點</strong>(403,而且它們的回應裡不會出現任何修訂版的痕跡);<strong>agent 憑證也一律 403</strong>,而且擋它的是伺服器側的規則,不是「MCP 沒有提供這個工具」。</p>
+<p>復原相關的錯誤碼:</p>
+<table>
+<tr><th style="width:44%">錯誤碼</th><th style="width:8%">狀態</th><th>意思</th></tr>
+<tr><td><code>CONTENT_REVISION_NOT_FOUND</code></td><td>404</td><td>沒有這個編號的發布修訂版(從沒存在,或已經超出保留窗口被刪掉)</td></tr>
+<tr><td><code>CONTENT_REVISION_NO_INVALID</code></td><td>400</td><td><code>revision_no</code> 不是正整數</td></tr>
+<tr><td><code>CONTENT_REVISION_AGENT_FORBIDDEN</code></td><td>403</td><td>agent 憑證不能讀發布史、也不能復原</td></tr>
+</table>
+
+<h3>8.3 結構</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:50%">路徑</th><th>需要的權限</th></tr>
+<tr><td>GET</td><td><code>/api/v1/content/types</code></td><td><code>content:list</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types/{name}/fields</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/types/{name}/fields/{key}</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/types/{name}/fields/{key}</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/types/{name}/fields/{key}/rename</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/types/{name}</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/components</code>、<code>/components/{name}</code></td><td><code>content:list</code> / <code>content:read</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/components</code></td><td><code>content:create</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/components/{name}</code>(只改 <code>label</code>)</td><td><code>content:schema:amend</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/components/{name}/rename</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/components/{name}/fields</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/content/components/{name}/fields/{key}</code></td><td><code>content:schema:amend</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/components/{name}/fields/{key}/rename</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/components/{name}/fields/{key}</code>、<code>/components/{name}</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/export</code></td><td><code>content:list</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/plan</code></td><td><code>content:schema:plan</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/apply</code></td><td><code>content:schema:write</code></td></tr>
+</table>
+<p>欄位除了 <code>type</code> / <code>required</code> / <code>multiple</code> / <code>enum_values</code>,還能帶值層約束:<code>unique</code>(同一 locale 內,工作副本與已發布快照都算)、<code>format: "slug"</code>、<code>pattern</code>(RE2,整串錨定)、<code>min</code> / <code>max</code>(字串是字元數,數字是值)。寫入不符回 422 <code>CONTENT_FIELD_CONSTRAINT_VIOLATED</code>,撞到別人的唯一值回 409 <code>CONTENT_FIELD_VALUE_TAKEN</code>。PATCH 欄位時放寬直接過,收緊會先掃既有資料,不符就 409 附筆數——與 <code>required</code> 同一套規則(ADR-007 Amendment 1)。</p>
+<p><strong>可重用元件</strong>(ADR-020)。「SEO 區塊」這種總是一起出現的幾個欄位,定義一次成元件(<code>POST /components</code>,帶 <code>name</code> 與 <code>fields[]</code>),再讓型別欄位以 <code>{"type":"component","component":"seo"}</code> 引用;<code>multiple: true</code> 就是一個列表。值<strong>內嵌在 entry 裡</strong>:單值是物件、多值是物件陣列(最多 100 個),子欄位的 <code>required</code> 與各型別驗證照常生效,錯誤以 <code>meta.title</code> 這種路徑命名。元件本身與子欄位<strong>不能當過濾、排序、populate 的鍵</strong>,子欄位也不能帶 <code>unique</code> / <code>read_roles</code> / <code>write_roles</code>——權限掛在引用欄位上,整個值一起藏。改一個元件,每個引用它的型別同時跟著變:加 <code>required</code> 子欄位、收緊約束時任一 entry 的任一 item 不符就 409 附筆數;改名與刪除子欄位會在同一個交易裡改寫每個引用型別的每筆 entry(工作副本與已發布快照都改);仍被引用的元件刪不掉(409 <code>CONTENT_COMPONENT_IN_USE</code>,回應列出 <code>used_by</code>)。<code>GET /components/{name}</code> 回子欄位與 <code>used_by</code>;型別 DTO 裡的引用欄位只帶 <code>component</code> 名稱,不內嵌子欄位。schema 產物多一段頂層 <code>components[]</code>,排在 <code>types</code> 之前;沒有元件的租戶匯出的位元組不變。</p>
+<p><strong>Dynamic zone</strong>(ADR-020 Amendment 1)。頁面組裝這種「hero、圖文、CTA 任意排列」的需求,多值 component 表達不了——多值只能重複同一個元件。宣告 <code>{"type":"dynamiczone","components":["hero","cta"]}</code>,值<strong>恆為陣列</strong>(最多 100 個),每個 item 是物件、帶一個 <code>"__component":"hero"</code> 指名自己是哪個元件,其餘 key 就是該元件的子欄位;驗證與 component item 走同一條路,錯誤路徑一樣是 <code>zone.headline</code> 加 <code>item</code> 索引;item 沒帶判別鍵是 422 <code>CONTENT_ZONE_COMPONENT_MISSING</code>,帶了但不在清單裡是 422 <code>CONTENT_ZONE_COMPONENT_NOT_ALLOWED</code>(回應的 <code>allowed</code> 就是那份清單)。<code>multiple</code> 對 zone 是 422(zone 本身就是清單),<code>required</code> 表示至少一個 item。允許清單<strong>可以改</strong>,兩個方向不對稱:<strong>加</strong>名字一律放行(名字要存在),<strong>拿掉</strong>名字時只要還有 entry 在該欄位的工作副本或已發布快照裡持有該元件的 item,就 409 <code>CONTENT_ZONE_COMPONENT_IN_USE</code> 附筆數——清單順序是編輯器 block 選單的順序,保留不排序。因為清單存的是<strong>名稱</strong>,元件改名成了一次資料遷移:<code>POST /components/{name}/rename</code> 在同一個交易裡改寫每個 zone 兩份 copy 的 <code>__component</code>、就地換掉每個允許清單、再改定義(revision 不改寫)。仍被任何 zone 的允許清單指名的元件刪不掉(同樣是 409 <code>CONTENT_COMPONENT_IN_USE</code>)。zone 與它的 item 同樣<strong>不能當過濾、排序、unique、populate 的鍵</strong>,zone 也不能當子欄位;delivery 端沒有新東西,值照原樣吐出。</p>
+<p>四個 <code>content:schema:*</code> 動詞的破壞性由低到高是 <code>amend</code> → <code>plan</code> → <code>propose</code> → <code>write</code>。只有 <code>write</code> 是 owner / admin 專屬。</p>
+
+<h3>8.4 提案</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:52%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals</code></td><td><code>content:schema:propose</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals</code></td><td><code>content:review:list</code>(審核佇列)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/{id}</code></td><td><code>content:review:list</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/mine</code></td><td><code>content:schema:propose</code>(自己送的)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/schema/proposals/mine/{id}</code></td><td><code>content:schema:propose</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals/{id}/approve</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/schema/proposals/{id}/reject</code></td><td><code>content:schema:write</code></td></tr>
+</table>
+
+<h3>8.5 媒體、活動、其他</h3>
+<table>
+<tr><th style="width:8%"></th><th style="width:44%">路徑</th><th>需要的權限</th></tr>
+<tr><td>POST</td><td><code>/api/v1/content/media</code></td><td><code>content:create</code>(開始上傳)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/media?q=&amp;kind=&amp;orphan=&amp;limit=&amp;offset=</code></td><td><code>content:list</code>(管理端媒體庫;<code>?orphan=true</code> 篩選未被任何 entry 引用(草稿與發布快照皆無)的候選孤兒資產,ADR-024)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/media/{id}/complete</code></td><td><code>content:update</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/media/{id}</code></td><td>取 metadata;管理端回應多帶 <code>variants</code>(每個 preset 的 state / 尺寸 / 失敗原因)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/media/{id}/url?preset=</code></td><td>取簽署 URL;<code>preset</code> 為 <code>thumb</code> / <code>small</code> / <code>medium</code> / <code>large</code> 之一,縮圖還沒好就給原圖,不認得的 preset 給 400</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/media/{id}/variants</code></td><td><code>content:update</code>(重新排隊生成縮圖;非影像 422,尚未上傳 409)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/media/{id}/referenced-by?limit=&amp;offset=</code></td><td><code>content:read</code>(反向查誰引用這個資產;預設 50、上限 200;agent 憑證因媒體授權一律 untyped 而一律 403,ADR-024)</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/content/media/{id}?force=</code></td><td><code>content:delete</code>(縮圖物件一併刪;預設先查 <code>entry_media</code>/<code>entry_media_published</code>,仍被引用回 409 <code>CONTENT_MEDIA_IN_USE</code>,<code>?force=true</code> 跳過檢查直接刪,ADR-024)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/activity</code></td><td><code>content:activity:read</code></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/pending-review</code></td><td><code>content:review:list</code>,<strong>agent 憑證一律不得存取</strong></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/search?q=&amp;locale=&amp;status=&amp;limit=</code></td><td><code>content:list</code>,橫跨所有內容型別;<strong>delivery / preview 憑證一律不得存取</strong></td></tr>
+<tr><td>GET</td><td><code>/api/v1/content/usage</code></td><td>租戶配額用量</td></tr>
+<tr><td>POST</td><td><code>/api/v1/content/webhooks</code></td><td><code>content:schema:write</code></td></tr>
+<tr><td>POST</td><td><code>/api/v1/tenants/invites</code></td><td>邀請成員(owner / admin)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/tenants/invites/accept</code></td><td>接受邀請(免授權,靠邀請碼)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/tenants/members</code></td><td>owner / admin / editor / viewer 皆可讀(ADR-022)</td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/tenants/members/{user_id}</code></td><td>owner / admin,改角色(ADR-022,規則見下)</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/tenants/members/{user_id}</code></td><td>owner / admin,移除成員(ADR-022,規則見下)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/tenants/invites</code></td><td>owner / admin,列出待處理邀請(ADR-022,絕不含原始 token)</td></tr>
+<tr><td>DELETE</td><td><code>/api/v1/tenants/invites/{id}</code></td><td>owner / admin,撤銷邀請(ADR-022,冪等)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/notifications?unread=&amp;limit=</code></td><td>自己的通知,固定過濾到 JWT 目前租戶(ADR-023)</td></tr>
+<tr><td>GET</td><td><code>/api/v1/notifications/unread-count</code></td><td>自己在目前租戶範圍的未讀數(ADR-023)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/notifications</code></td><td>自建一筆通知給自己</td></tr>
+<tr><td>PATCH</td><td><code>/api/v1/notifications/{id}/read</code></td><td>標記已讀;別人的通知一律 404(ADR-023)</td></tr>
+<tr><td>POST</td><td><code>/api/v1/notifications/read-all</code></td><td>標記目前租戶範圍全部已讀,回傳筆數(ADR-023)</td></tr>
+</table>
+
+<p><strong>成員管理</strong>(ADR-022)。<code>GET /tenants/members</code> 回
+<code>{"items":[{"user_id","email","role","joined_at"}]}</code>,最舊的成員在前,固定上限
+200(沒有分頁游標)。<code>PATCH /tenants/members/{user_id}</code> body
+<code>{"role"}</code>:admin 不能指派或改動 owner 角色(<code>TENANT_CANNOT_ASSIGN_OWNER</code>,
+403);<strong>不能改自己的角色</strong>(<code>TENANT_SELF_ROLE_CHANGE</code>,409——離開租戶是
+獨立、目前未提供的功能,不是這支端點的特例);租戶僅剩的 owner 無法被降級
+(<code>TENANT_LAST_OWNER</code>,409,由 repository 層鎖強制)。自己對自己降級走的是
+<code>TENANT_SELF_ROLE_CHANGE</code>;<code>TENANT_LAST_OWNER</code> 經 HTTP API 唯一可達的
+路徑是兩個 owner 併發互降——這時鎖決出唯一贏家,輸的一方拿到 409
+<code>TENANT_LAST_OWNER</code>,見 ADR-022 §3/§3b。<code>DELETE /tenants/members/{user_id}</code>
+同一套自我操作與 last-owner
+規則(<code>TENANT_SELF_REMOVE</code> 409、<code>TENANT_LAST_OWNER</code> 409),移除後會盡力
+吊銷該成員在<strong>這個租戶</strong>的 refresh token,但已核發、尚未過期的 access token 仍在其
+TTL(≤15 分鐘)內可用——這是已知、刻意不解的限制。<code>GET /tenants/invites</code> 只列尚未
+接受也未撤銷的邀請,回應絕不含原始邀請 token。<code>DELETE /tenants/invites/{id}</code>
+撤銷一封待處理邀請;對已撤銷的邀請再次呼叫是成功的空操作(冪等)。被撤銷的邀請之後若被
+接受,回 410 <code>INVITE_REVOKED</code>——與既有的「邀請人事後失去 owner/admin 身分」
+(<code>INVITE_INVITER_REVOKED</code>)是兩個不同的碼,前者是一次明確的取消,後者是系統偵測到
+的附帶後果,見 ADR-022 §4。</p>
+
+<p><strong>站內通知</strong>(ADR-023)。四個系統掛點會主動寫入:entry 從「已發布且無未發布變更」
+第一次轉為「有未發布變更」時通知租戶 owner/admin(排除觸發者)、排程發布的成功
+/ 過期作廢 / 失敗三種結果各自通知那次核准排程的人(<code>s.RequestedBy</code>)、webhook
+端點被判定死信(重試中的失敗不算)時通知租戶 owner/admin。每筆通知帶
+<code>kind</code>(<code>general</code> / <code>schema_proposal</code> /
+<code>entry_pending_review</code> / <code>schedule_succeeded</code> / <code>schedule_failed</code>
+/ <code>schedule_stale</code> / <code>webhook_dead</code> 七選一)、可為 null 的
+<code>link</code>(app 內相對路徑,不是絕對 URL)與可為 null 的 <code>tenant_id</code>
+——<code>tenant_id</code> 為 null 表示這筆通知不屬於單一租戶視角過濾,任何租戶上下文下都看得到,
+不是「沒有租戶因此誰都看不到」。<code>GET /notifications</code> 與 unread-count 的過濾條件都是
+<code>tenant_id = 目前租戶 OR tenant_id IS NULL</code>。<code>PATCH .../{id}/read</code> 對別人的
+通知(存在但不屬於呼叫者)與對不存在的 id 回應完全相同的 404,不洩漏 id 是否真實存在。
+去抖不靠計時器或去重表,靠後端狀態本身的一次性轉換——細節與已知限制見 ADR-023。</p>
+
+<p><strong>媒體縮圖</strong>(ADR-019)。影像上傳 <code>complete</code> 的同一刻就排進縮圖佇列:<code>original</code> 加四個平台固定的 preset ——<code>thumb</code> 320、<code>small</code> 640、<code>medium</code> 1024、<code>large</code> 1920,以<strong>寬度</strong>為界、<strong>永不放大</strong>(原圖比 preset 窄的那格會標成 <code>skipped</code> / <code>source_smaller</code>)。JPEG 出 JPEG,PNG / GIF / WebP 一律出 PNG,AVIF 目前整組 <code>skipped</code>(<code>unsupported_format</code>);PDF 這類非影像沒有 <code>variants</code>。縮圖是背景 worker 做的,上傳完成到縮圖可用之間有十幾秒的窗口,這段時間 <code>?preset=</code> 給的是原圖——<strong>頁面不會壞,只是先大圖後小圖</strong>。管理端 <code>GET /media/{id}</code> 的 <code>variants</code> 陣列會告訴你每格的 <code>state</code>(<code>pending</code> / <code>done</code> / <code>skipped</code> / <code>failed</code>)、實測的 <code>width_px</code> / <code>height_px</code>、以及失敗時的 <code>error</code> 與 <code>attempts</code>(最多三次,間隔 1 分鐘、5 分鐘)。<code>POST /media/{id}/variants</code> 可以重新排隊,也是舊資產(功能上線前上傳的)唯一長出縮圖的方法——沒有自動回填。re-encode 會丟掉全部 EXIF(GPS、相機資訊都不會出現在縮圖裡),方向資訊在丟掉前已經套到像素上;原圖本身一個位元組都沒動。</p>
+
+<p><strong>跨型別搜尋</strong>(<code>/content/search</code>,ADR-021 §3)。<code>q</code> 必填(空字串回 400 <code>CONTENT_SEARCH_QUERY_REQUIRED</code>,跟 <code>/entries</code> 的 <code>q</code>「空字串等於不搜尋」不同),同樣是空白切詞、全部 AND、上限 200 字元。<code>limit</code> 預設 20、上限 50。回應 <code>{"items":[{"id","content_type","locale","status","updated_at","snippet"}]}</code>,按 <code>updated_at</code> 新到舊排序,<strong>不帶欄位值</strong>(跟 <code>/pending-review</code> 一樣,橫跨每個型別沒有單一型別的欄位權限可套)。<code>snippet</code> 是比對到的第一個詞前後各約 60 字的純文字片段,找不到就退回開頭 120 字。跟每型別 <code>q</code> 一樣比對工作副本,即使呼叫者是 viewer 也一樣(這是 staff-only 端點,授權沿用 <code>content:list</code>)。</p>
+<h3>8.6 對外取用已發佈內容(delivery edge)</h3>
+<p>前台站台走 <code>:4100</code>,路徑<strong>不含</strong> <code>/api</code> 前綴,而且只讀得到已發佈的內容:</p>
+<table>
+<tr><td style="width:8%">GET</td><td style="width:44%"><code>/v1/{tenant}/{type}/</code></td><td>列出已發佈 entry</td></tr>
+<tr><td>GET</td><td><code>/v1/{tenant}/{type}/{id}</code></td><td>取單筆已發佈 entry</td></tr>
+<tr><td>GET</td><td><code>/v1/{tenant}/media/{id}</code></td><td>取已發佈的媒體;可帶 <code>?preset=thumb|small|medium|large</code> 取縮圖(寬度 320 / 640 / 1024 / 1920,永不放大),縮圖尚未生成或原圖更小時退回原圖,回應裡<strong>沒有</strong> <code>variants</code></td></tr>
+</table>
+<p>列表可帶的參數:<code>locale</code>、<code>limit</code>、<code>cursor</code>(接續上一頁的 <code>next_cursor</code>)、<code>filter</code>(可重複,<code>key:op:value</code>,op 為 eq / neq / gt / gte / lt / lte / in / contains / has / nhas)、<code>sort</code>(<code>key:asc</code> 或 <code>key:desc</code>,單一鍵)、<code>fields</code>(只回這些欄位)、<code>populate</code>(可重複、值內可用逗號,展開關聯欄位)、<code>q</code>(ADR-021,同 8.2 所述的多詞 AND 全文搜尋,原樣轉發到 upstream,比對的是 <code>published_search_text</code>,即已發布快照的抽出文字)。過濾與排序一律對<strong>已發布的快照</strong>評估,草稿裡的字串探不到、草稿改過的值也不會影響順序。沒有 <code>offset</code>:分頁只走 cursor;不帶 <code>sort</code> 就是固定最新在前。</p>
+<p>可排序的鍵就是該內容型別自己定義的欄位,與管理端同一組規則(多值欄位、richtext 與 component 欄位不可排序;component 的子欄位如 <code>meta.title</code> 也不是過濾或排序鍵,ADR-020)。<strong>該欄位沒有值的 entry 一律排在最後</strong>,升冪降冪都是——否則把方向反過來,第一頁就會塞滿沒填過這個欄位的資料。<code>cursor</code> 與 <code>sort</code> 是綁在一起的:token 記住了它是在哪個排序下發出的,<strong>翻頁翻到一半改 <code>sort</code> 會得到 400</strong>(<code>CONTENT_CURSOR_INVALID</code>),請丟掉 cursor 從第一頁重翻。這是刻意的:同一個位置在另一個順序裡根本在別的地方,靜默重來只會讓程式無聲地重讀第一頁。</p>
+<p><code>populate</code> 展開關聯,列表與單筆都能用(<code>?populate=author&amp;populate=tags</code>)。<strong>值可以用 <code>.</code> 接到最深 3 段</strong>(<code>author.avatar</code>、<code>author.avatar.owner</code>),ADR-006 Amendment 8:第二段起是被展開實體自己的關聯欄位,超過 3 段回 400 <code>CONTENT_POPULATE_TOO_DEEP</code>。展開的結果放在與 <code>data</code> <strong>同層的 <code>related</code></strong>,巢狀時每一層同一個形狀——<code>author.avatar</code> 掛在 <code>related.author.related.avatar</code>,不是攤平的路徑鍵。<code>data</code> 裡的關聯欄位仍然是 id ——同一個欄位的型別不會因為帶不帶參數而改變,沒帶 <code>populate</code> 的回應也逐位元組不變。基數跟著 schema:單值欄位給物件或 <code>null</code>,多值欄位給陣列(空的給 <code>[]</code>),<strong>順序與 <code>data</code> 裡的 id 一致</strong>。目標指向草稿、已下架或已刪除的內容<strong>不是錯誤</strong>:單值給 <code>null</code>、多值直接略過(但鍵一定在,「問了但沒有」與「沒問」是不同的答案)。被展開的實體同樣只給已發布快照、同樣套它自己型別的欄位權限,巢狀的每一層都一樣;<code>fields</code> 只作用於母體。一個指回自己路徑上某筆實體的關聯照常渲染那一筆,但不會再展開進它自己的 <code>related</code>——即使深度預算還沒花完,擋的是環而不是長度。(管理面也能用同一個參數,語法、深度上限、錯誤碼完全相同,展開的是<strong>工作副本</strong>、看得到從沒發布過的目標——見 8.2。)</p>
+<p><code>populate</code> 的錯誤:<code>CONTENT_POPULATE_FIELD_UNKNOWN</code>(400,型別沒有這個欄位,回應會列出可用的關聯欄位——巢狀路徑任一段皆適用)、<code>CONTENT_POPULATE_NOT_RELATION</code>(400,該段欄位不是關聯,元件與 dynamic zone 欄位一律算在內)、<code>CONTENT_POPULATE_TOO_DEEP</code>(400,超過 3 段)、<code>CONTENT_POPULATE_TOO_MANY</code>(400,<strong>整個請求所有層級加總</strong>去重後超過 500 個關聯目標——把 <code>limit</code> 調小、少展開幾個欄位,或縮短路徑深度)。多段路徑由左至右解析,第一個失敗的段決定回應。關聯欄位本身或目標型別不可讀時是 403,經 edge 會變成通用的上游錯誤。</p>
+<p>需要 delivery 憑證,與 console / agent 憑證是不同的東西。草稿永遠不會從這裡流出去。</p>
+</section>

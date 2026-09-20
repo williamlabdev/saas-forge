@@ -1,0 +1,21 @@
+-- Reverses 000042.
+--
+-- WHAT IS LOST. Every stored release snapshot, and with it the restore path:
+-- after this runs the console can still show that an entry was published on
+-- three occasions, because content_activity keeps those lines, but the payloads
+-- those releases carried are gone and "put February back" has no answer again.
+-- The current working copy and the one live snapshot on `entries` survive
+-- untouched — this table never held the only copy of either.
+--
+-- WHAT IS NOT TOUCHED, deliberately. `entry_revisions` (000034) is a different
+-- table with a different job and is left exactly as it was; anyone reading this
+-- file to undo "revisions" should check which of the two they meant. The
+-- ActivityEntryRestore rows already in content_activity are also left: the verb
+-- becomes one nothing can produce any more, which is the correct residue of a
+-- removed capability rather than something to scrub.
+--
+-- There is no partial rollback. Retention, the ordinal and the restore endpoint
+-- are all expressed in this table; keeping the rows while removing the mechanism
+-- would leave snapshots nothing can read.
+
+DROP TABLE IF EXISTS entry_publish_revisions;

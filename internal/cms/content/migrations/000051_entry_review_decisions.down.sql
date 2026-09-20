@@ -1,0 +1,16 @@
+-- Reverses 000051.
+--
+-- WHAT IS LOST. Every review decision ever recorded: which entries were sent
+-- back, why, and against which version. An entry that was "sent back and not
+-- yet re-edited" loses that status silently — it simply reappears as an
+-- ordinary pending-review row, indistinguishable from one nobody has looked
+-- at, because the queue predicate this migration's Go sibling adds has no
+-- table to query once this table is gone. content_activity keeps the
+-- entry.review.changes_requested rows (the reason text lives in their
+-- `details`), so the audit trail survives; only the queue's own memory of
+-- "sent back" does not.
+--
+-- The notification kind CHECK's widening lives and reverses in
+-- internal/notification/migrations/000052 — see this migration's up.sql for
+-- why it is not here.
+DROP TABLE IF EXISTS entry_review_decisions;
